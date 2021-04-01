@@ -14,6 +14,11 @@ task :benchmark do
   ruby "./performance/benchmark.rb"
 end
 
+desc "Runs benchmarks against component content area/ slot implementations"
+task :slotable_benchmark do
+  ruby "./performance/slotable_benchmark.rb"
+end
+
 namespace :coverage do
   task :report do
     require "simplecov"
