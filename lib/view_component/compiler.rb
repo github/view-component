@@ -46,7 +46,10 @@ module ViewComponent
         instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
       end
 
-      component_class.validate_collection_parameter! if raise_errors
+      if raise_errors
+        component_class.validate_initialization_parameters!
+        component_class.validate_collection_parameter!
+      end
 
       templates.each do |template|
         # Remove existing compiled template methods,
