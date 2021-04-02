@@ -493,4 +493,16 @@ class IntegrationTest < ActionDispatch::IntegrationTest
       assert_select "input[value=?]", "Send this form!"
     end
   end
+
+  def test_renders_link_component_with_active_model
+    get "/link_with_active_model"
+
+    assert_select "a[href='/posts/1']"
+  end
+
+  def test_renders_link_component_with_path
+    get "/link_with_path"
+
+    assert_select "a[href='/posts/1']"
+  end
 end
