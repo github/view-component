@@ -61,8 +61,42 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_text("bar")
   end
 
+  def test_renders_slim_with_many_slots
+    render_inline(SlimRendersManyComponent.new) do |c|
+      c.slim_component(message: "Bar A") do
+        "Foo A "
+      end
+      c.slim_component(message: "Bar B") do
+        "Foo B "
+      end
+    end
+
+    assert_selector(".slim-div", text: "Foo A Bar A")
+    assert_selector(".slim-div", text: "Foo B Bar B")
+  end
+
+  def test_renders_slim_with_html_formatted_slot
+    render_inline(SlimHtmlFormattedSlotComponent.new)
+
+    assert_selector("p", text: "HTML Formatted")
+  end
+
+  def test_renders_slim_escaping_dangerous_html_assign
+    render_inline(SlimWithUnsafeHtmlComponent.new)
+
+    refute_selector("script")
+    assert_selector(".slim-div", text: "<script>alert('xss')</script>")
+  end
+
   def test_renders_haml_template
     render_inline(HamlComponent.new(message: "bar")) { "foo" }
+
+    assert_text("foo")
+    assert_text("bar")
+  end
+
+  def test_render_jbuilder_template
+    render_inline(JbuilderComponent.new(message: "bar")) { "foo" }
 
     assert_text("foo")
     assert_text("bar")
@@ -210,6 +244,16 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_includes exception.message, ":content is a reserved content area name"
   end
 
+  def test_with_content_areas_render_predicate
+    render_inline(ContentAreasPredicateComponent.new) do |c|
+      c.with :title do
+        "hello world"
+      end
+    end
+
+    assert_selector("h1", text: "hello world")
+  end
+
   def test_renders_helper_method_through_proxy
     render_inline(HelpersProxyComponent.new)
 
@@ -217,7 +261,7 @@ class ViewComponentTest < ViewComponent::TestCase
   end
 
   def test_renders_helper_method_within_nested_component
-    render_inline(HelpersContainerComponent.new)
+    render_inline(ContainerComponent.new)
 
     assert_text("Hello helper method")
   end
@@ -365,7 +409,7 @@ class ViewComponentTest < ViewComponent::TestCase
       render_inline(ValidationsComponent.new)
     end
 
-    assert_equal exception.message, "Validation failed: Content can't be blank"
+    assert_equal "Validation failed: Content can't be blank", exception.message
   end
 
   # TODO: Remove in v3.0.0
@@ -374,7 +418,7 @@ class ViewComponentTest < ViewComponent::TestCase
       render_inline(OldValidationsComponent.new)
     end
 
-    assert_equal exception.message, "Validation failed: Content can't be blank"
+    assert_equal "Validation failed: Content can't be blank", exception.message
   end
 
   def test_compiles_unrendered_component
@@ -439,6 +483,14 @@ class ViewComponentTest < ViewComponent::TestCase
     end
 
     assert_includes error.message, "More than one template found for TemplateAndSidecarDirectoryTemplateComponent."
+  end
+
+  def test_with_custom_test_controller
+    with_controller_class CustomTestControllerController do
+      render_inline(CustomTestControllerComponent.new)
+
+      assert_text("foo")
+    end
   end
 
   def test_backtrace_returns_correct_file_and_line_number
@@ -536,6 +588,36 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_match(/MissingDefaultCollectionParameterComponent initializer must accept `missing_default_collection_parameter` collection parameter/, exception.message)
   end
 
+  def test_component_with_invalid_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidParametersComponent.ensure_compiled(raise_errors: true)
+      end
+
+      assert_match(/InvalidParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
+  def test_component_with_invalid_named_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidNamedParametersComponent.ensure_compiled(raise_errors: true)
+      end
+
+      assert_match(/InvalidNamedParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
   def test_collection_component_with_trailing_comma_attr_reader
     exception = assert_raises ArgumentError do
       render_inline(
@@ -565,21 +647,10 @@ class ViewComponentTest < ViewComponent::TestCase
   end
 
   def test_inherited_inline_component_inherits_inline_method
-    render_inline(InheritedInlineComponent.new)
+    render_inline(InlineInheritedComponent.new)
 
-    assert_predicate InheritedInlineComponent, :compiled?
+    assert_predicate InlineInheritedComponent, :compiled?
     assert_selector("input[type='text'][name='name']")
   end
-
-  def test_does_not_render_passed_in_content_if_render_is_false
-    start_time = Time.now
-
-    render_inline ConditionalRenderComponent.new(should_render: false) do |c|
-      c.render SleepComponent.new(seconds: 5)
-    end
-
-    total = Time.now - start_time
-
-    assert total < 1
   end
 end
