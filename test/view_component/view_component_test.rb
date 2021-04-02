@@ -61,6 +61,33 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_text("bar")
   end
 
+  def test_renders_slim_with_many_slots
+    render_inline(SlimRendersManyComponent.new) do |c|
+      c.slim_component(message: "Bar A") do
+        "Foo A "
+      end
+      c.slim_component(message: "Bar B") do
+        "Foo B "
+      end
+    end
+
+    assert_selector(".slim-div", text: "Foo A Bar A")
+    assert_selector(".slim-div", text: "Foo B Bar B")
+  end
+
+  def test_renders_slim_with_html_formatted_slot
+    render_inline(SlimHTMLFormattedSlotComponent.new)
+
+    assert_selector("p", text: "HTML Formatted")
+  end
+
+  def test_renders_slim_escaping_dangerous_html_assign
+    render_inline(SlimWithUnsafeHTMLComponent.new)
+
+    refute_selector("script")
+    assert_selector(".slim-div", text: "<script>alert('xss')</script>")
+  end
+
   def test_renders_haml_template
     render_inline(HamlComponent.new(message: "bar")) { "foo" }
 
@@ -534,6 +561,36 @@ class ViewComponentTest < ViewComponent::TestCase
     end
 
     assert_match(/MissingDefaultCollectionParameterComponent initializer must accept `missing_default_collection_parameter` collection parameter/, exception.message)
+  end
+
+  def test_component_with_invalid_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidParametersComponent.compile(raise_errors: true)
+      end
+
+      assert_match(/InvalidParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
+  def test_component_with_invalid_named_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidNamedParametersComponent.compile(raise_errors: true)
+      end
+
+      assert_match(/InvalidNamedParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
   end
 
   def test_collection_component_with_trailing_comma_attr_reader
