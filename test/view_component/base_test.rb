@@ -16,7 +16,8 @@ class ViewComponent::Base::UnitTest < Minitest::Test
     ]
 
     compiler = ViewComponent::Compiler.new(ViewComponent::Base)
-    compiler.stub(:matching_views_in_source_location, file_path) do
+
+    ViewComponent::Base.stub(:_sidecar_files, file_path) do
       templates = compiler.send(:templates)
 
       templates.each_with_index do |template, index|
@@ -41,5 +42,30 @@ class ViewComponent::Base::UnitTest < Minitest::Test
       component.controller
     end
     assert_equal "`controller` can only be called at render time.", err.message
+  end
+
+  def test_sidecar_files
+    root = ViewComponent::Engine.root
+
+    assert_equal(
+      [
+        "#{root}/test/app/components/template_and_sidecar_directory_template_component.html.erb",
+        "#{root}/test/app/components/template_and_sidecar_directory_template_component/template_and_sidecar_directory_template_component.html.erb",
+      ],
+      TemplateAndSidecarDirectoryTemplateComponent._sidecar_files(["erb"])
+    )
+
+    assert_equal(
+      [
+        "#{root}/test/app/components/css_sidecar_file_component.css",
+        "#{root}/test/app/components/css_sidecar_file_component.html.erb",
+      ],
+      CssSidecarFileComponent._sidecar_files(["css", "erb"])
+    )
+
+    assert_equal(
+      ["#{root}/test/app/components/css_sidecar_file_component.css"],
+      CssSidecarFileComponent._sidecar_files(["css"])
+    )
   end
 end

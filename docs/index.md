@@ -28,7 +28,7 @@ ViewComponents are Ruby objects that output HTML. Think of them as an evolution 
 
 ### When should I use components?
 
-Components are most effective in cases where view code is reused or benefits from being tested directly.
+Components are most effective in cases where view code is reused or benefits from being tested directly. Heavily reused partials and templates with significant amounts of embedded Ruby often make good ViewComponents.
 
 ### Why should I use components?
 
@@ -48,7 +48,7 @@ ViewComponents use a standard Ruby initializer that clearly defines what is need
 
 #### Performance
 
-Based on our [benchmarks](../performance/benchmark.rb), ViewComponents are ~10x faster than partials.
+Based on our [benchmarks](https://github.com/github/view_component/blob/main/performance/benchmark.rb), ViewComponents are ~10x faster than partials.
 
 #### Standards
 
@@ -75,7 +75,8 @@ Use the component generator to create a new ViewComponent.
 The generator accepts a component name and a list of arguments:
 
 ```bash
-bin/rails generate component Example title content
+bin/rails generate component Example title
+
       invoke  test_unit
       create  test/components/example_component_test.rb
       create  app/components/example_component.rb
@@ -87,24 +88,30 @@ ViewComponent includes template generators for the `erb`, `haml`, and `slim` tem
 The template engine can also be passed as an option to the generator:
 
 ```bash
-bin/rails generate component Example title content --template-engine slim
+bin/rails generate component Example title --template-engine slim
+```
+
+To generate a [preview](#previewing-components), pass the `--preview` option:
+
+```bash
+bin/rails generate component Example title --preview
 ```
 
 #### Implementation
 
 A ViewComponent is a Ruby file and corresponding template file with the same base name:
 
-`app/components/test_component.rb`:
+`app/components/example_component.rb`:
 
 ```ruby
-class TestComponent < ViewComponent::Base
+class ExampleComponent < ViewComponent::Base
   def initialize(title:)
     @title = title
   end
 end
 ```
 
-`app/components/test_component.html.erb`:
+`app/components/example_component.html.erb`:
 
 ```erb
 <span title="<%= @title %>"><%= content %></span>
@@ -113,7 +120,7 @@ end
 Rendered in a view as:
 
 ```erb
-<%= render(TestComponent.new(title: "my title")) do %>
+<%= render(ExampleComponent.new(title: "my title")) do %>
   Hello, World!
 <% end %>
 ```
@@ -124,64 +131,21 @@ Returning:
 <span title="my title">Hello, World!</span>
 ```
 
-#### Content Areas
+#### Passing content to ViewComponents
 
 Content passed to a ViewComponent as a block is captured and assigned to the `content` accessor.
 
-ViewComponents can declare additional content areas. For example:
+ViewComponents also accept content through Slots, enabling multiple blocks of content to be passed to a single ViewComponent.
 
-`app/components/modal_component.rb`:
-
-```ruby
-class ModalComponent < ViewComponent::Base
-  with_content_areas :header, :body
-end
-```
-
-`app/components/modal_component.html.erb`:
-
-```erb
-<div class="modal">
-  <div class="header"><%= header %></div>
-  <div class="body"><%= body %></div>
-</div>
-```
-
-Rendered in a view as:
-
-```erb
-<%= render(ModalComponent.new) do |component| %>
-  <% component.with(:header) do %>
-    Hello Jane
-  <% end %>
-  <% component.with(:body) do %>
-    <p>Have a great day.</p>
-  <% end %>
-<% end %>
-```
-
-Returning:
-
-```html
-<div class="modal">
-  <div class="header">Hello Jane</div>
-  <div class="body"><p>Have a great day.</p></div>
-</div>
-```
-
-#### Slots (experimental)
-
-_Slots are currently under development as the successor to Content Areas. The Slot APIs should be considered unfinished (it's already in its second iteration, [see the original API](/slots-v1).) and subject to breaking changes in non-major releases of ViewComponent._
-
-Slots enable multiple blocks of content to be passed to a single ViewComponent, improving the ergonomics of complex components.
-
-Slots are defined with with `renders_one` and `renders_many`:
+Slots are defined with `renders_one` and `renders_many`:
 
 `renders_one` defines a slot that will be rendered at most once per component: `renders_one :header`
 
 `renders_many` defines a slot that can be rendered multiple times per-component: `renders_many :blog_posts`
 
-#### Defining slots
+_To view documentation for content_areas (soon to be deprecated) and the original implementation of Slots, see [/content_areas](/content_areas) and [/slots_v1](/slots_v1)._
+
+##### Defining slots
 
 Slots come in three forms:
 
@@ -197,8 +161,6 @@ Delegate slots delegate to another component:
 
 ```ruby
 class BlogComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   # Since `HeaderComponent` is nested inside of this component, we have to
   # reference it as a string instead of a class name.
   renders_one :header, "HeaderComponent"
@@ -207,10 +169,14 @@ class BlogComponent < ViewComponent::Base
   renders_many :posts, PostComponent
 
   class HeaderComponent < ViewComponent::Base
-    attr_reader :title
+    attr_reader :classes
 
-    def initialize(title:)
-      @title = title
+    def initialize(classes:)
+      @classes = classes
+    end
+
+    def call
+      content_tag :h1, content, { class: classes }
     end
   end
 end
@@ -220,7 +186,7 @@ end
 
 ```erb
 <div>
-  <h1><%= header %></h1> <!-- render the header component -->
+  <%= header %> <!-- render the header component -->
 
   <% posts.each do |post| %>
     <div class="blog-post-wrapper">
@@ -234,7 +200,7 @@ end
 
 ```erb
 <%= render BlogComponent.new do |c| %>
-  <% c.header do %>
+  <% c.header(classes: "") do %>
     <%= link_to "My Site", root_path %>
   <% end %>
 
@@ -254,12 +220,10 @@ Lambda slots render their return value. Lambda slots are useful for working with
 
 ```ruby
 class BlogComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   # Renders the returned string
-  renders_one :header, -> (title:) do
+  renders_one :header, -> (classes:) do
     content_tag :h1 do
-      link_to title, root_path
+      link_to title, root_path, { class: classes }
     end
   end
 
@@ -279,8 +243,6 @@ Define a pass through slot by omitting the second argument to `renders_one` and 
 ```ruby
 # blog_component.rb
 class BlogComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   renders_one :header
   renders_many :posts
 end
@@ -301,7 +263,7 @@ end
 ```erb
 <div>
   <%= render BlogComponent.new do |c| %>
-    <%= c.header do %>
+    <%= c.header(classes: '') do %>
       <%= link_to "My blog", root_path %>
     <% end %>
 
@@ -322,8 +284,6 @@ e.g.
 
 ```ruby
 class NavigationComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   renders_many :links, "LinkComponent"
 
   class LinkComponent < ViewComponent::Base
@@ -399,6 +359,25 @@ And render them `with_variant`:
 
 _**Note**: `call_*` methods must be public._
 
+### Validations
+
+ViewComponent does not include support for validations. However, it can be added by using `ActiveModel::Validations`:
+
+```ruby
+class ExampleComponent < ViewComponent::Base
+  include ActiveModel::Validations
+
+  # Requires that a content block be passed to the component
+  validate :content, presence: true
+
+  def before_render
+    validate!
+  end
+end
+```
+
+_Note: Using validations in this manner can lead to runtime exceptions. Use them wisely._
+
 ### Template Inheritance
 
 Components that subclass another component inherit the parent component's
@@ -422,21 +401,20 @@ The simplest option is to place the view next to the Ruby component:
 ```console
 app/components
 ├── ...
-├── test_component.rb
-├── test_component.html.erb
+├── example_component.rb
+├── example_component.html.erb
 ├── ...
 ```
 
 #### Sidecar directory
 
-As an alternative, views and other assets can be placed in a sidecar directory with the same name as the component, which can be useful for organizing views alongside other assets like Javascript and CSS.
+As an alternative, views and other assets can be placed in a sidecar directory with the same name as the component, which can be useful for organizing views alongside other assets like Javascript.
 
 ```console
 app/components
 ├── ...
 ├── example_component.rb
 ├── example_component
-|   ├── example_component.css
 |   ├── example_component.html.erb
 |   └── example_component.js
 ├── ...
@@ -445,7 +423,7 @@ app/components
 To generate a component with a sidecar directory, use the `--sidecar` flag:
 
 ```console
-bin/rails generate component Example title content --sidecar
+bin/rails generate component Example title --sidecar
       invoke  test_unit
       create  test/components/example_component_test.rb
       create  app/components/example_component.rb
@@ -534,14 +512,14 @@ end
 
 _To assert that a component has not been rendered, use `refute_component_rendered` from `ViewComponent::TestHelpers`._
 
-### `before_render`
+### `#before_render`
 
-Components can define a `before_render` method to be called before a component is rendered, when `helpers` is able to be used:
+ViewComponents can define a `before_render` method to be called before a component is rendered, when `helpers` is able to be used:
 
-`app/components/confirm_email_component.rb`
+`app/components/example_component.rb`
 
 ```ruby
-class MyComponent < ViewComponent::Base
+class ExampleComponent < ViewComponent::Base
   def before_render
     @my_icon = helpers.star_icon
   end
@@ -683,6 +661,18 @@ class UserComponent < ViewComponent::Base
 end
 ```
 
+#### Using nested URL helpers
+
+Rails nested URL helpers implicitly depend on the current `request` in certain cases. Since ViewComponent is built to enable reusing components in different contexts, nested URL helpers should be passed their options explicitly:
+
+```ruby
+# bad
+edit_user_path # implicitly depends on current request to provide `user`
+
+# good
+edit_user_path(user: current_user)
+```
+
 ### Writing tests
 
 Unit test components directly, using the `render_inline` test helper, asserting against the rendered output.
@@ -692,9 +682,9 @@ Capybara matchers are available if the gem is installed:
 ```ruby
 require "view_component/test_case"
 
-class MyComponentTest < ViewComponent::TestCase
+class ExampleComponentTest < ViewComponent::TestCase
   def test_render_component
-    render_inline(TestComponent.new(title: "my title")) { "Hello, World!" }
+    render_inline(ExampleComponent.new(title: "my title")) { "Hello, World!" }
 
     assert_selector("span[title='my title']", text: "Hello, World!")
     # or, to just assert against the text:
@@ -703,11 +693,13 @@ class MyComponentTest < ViewComponent::TestCase
 end
 ```
 
+_Note: `assert_selector` only matches on visible elements by default. To match on hidden elements, add `visible: false`. See the [Capybara documentation](https://rubydoc.info/github/jnicklas/capybara/Capybara/Node/Matchers) for more details._
+
 In the absence of `capybara`, assert against the return value of `render_inline`, which is an instance of `Nokogiri::HTML::DocumentFragment`:
 
 ```ruby
 def test_render_component
-  result = render_inline(TestComponent.new(title: "my title")) { "Hello, World!" }
+  result = render_inline(ExampleComponent.new(title: "my title")) { "Hello, World!" }
 
   assert_includes result.css("span[title='my title']").to_html, "Hello, World!"
 end
@@ -717,7 +709,7 @@ Alternatively, assert against the raw output of the component, which is exposed 
 
 ```ruby
 def test_render_component
-  render_inline(TestComponent.new(title: "my title")) { "Hello, World!" }
+  render_inline(ExampleComponent.new(title: "my title")) { "Hello, World!" }
 
   assert_includes rendered_component, "Hello, World!"
 end
@@ -745,7 +737,7 @@ Use the `with_variant` helper to test specific variants:
 ```ruby
 def test_render_component_for_tablet
   with_variant :tablet do
-    render_inline(TestComponent.new(title: "my title")) { "Hello, tablets!" }
+    render_inline(ExampleComponent.new(title: "my title")) { "Hello, tablets!" }
 
     assert_selector("span[title='my title']", text: "Hello, tablets!")
   end
@@ -754,22 +746,26 @@ end
 
 ### Previewing Components
 
-`ViewComponent::Preview`, like `ActionMailer::Preview`, provides a way to preview components in isolation:
+`ViewComponent::Preview`, like `ActionMailer::Preview`, provides a quick way to preview components in isolation.
 
-`test/components/previews/test_component_preview.rb`
+_For a more interactive experience, consider using [ViewComponent::Storybook](https://github.com/jonspalmer/view_component_storybook)._
+
+`ViewComponent::Preview`s are defined as:
+
+`test/components/previews/example_component_preview.rb`
 
 ```ruby
-class TestComponentPreview < ViewComponent::Preview
+class ExampleComponentPreview < ViewComponent::Preview
   def with_default_title
-    render(TestComponent.new(title: "Test component default"))
+    render(ExampleComponent.new(title: "Example component default"))
   end
 
   def with_long_title
-    render(TestComponent.new(title: "This is a really long title to see how the component renders this"))
+    render(ExampleComponent.new(title: "This is a really long title to see how the component renders this"))
   end
 
   def with_content_block
-    render(TestComponent.new(title: "This component accepts a block of content")) do
+    render(ExampleComponent.new(title: "This component accepts a block of content")) do
       tag.div do
         content_tag(:span, "Hello")
       end
@@ -778,23 +774,23 @@ class TestComponentPreview < ViewComponent::Preview
 end
 ```
 
-Which generates <http://localhost:3000/rails/view_components/test_component/with_default_title>,
-<http://localhost:3000/rails/view_components/test_component/with_long_title>,
-and <http://localhost:3000/rails/view_components/test_component/with_content_block>.
+Which generates <http://localhost:3000/rails/view_components/example_component/with_default_title>,
+<http://localhost:3000/rails/view_components/example_component/with_long_title>,
+and <http://localhost:3000/rails/view_components/example_component/with_content_block>.
 
 It's also possible to set dynamic values from the params by setting them as arguments:
 
-`test/components/previews/test_component_preview.rb`
+`test/components/previews/example_component_preview.rb`
 
 ```ruby
-class TestComponentPreview < ViewComponent::Preview
-  def with_dynamic_title(title: "Test component default")
-    render(TestComponent.new(title: title))
+class ExampleComponentPreview < ViewComponent::Preview
+  def with_dynamic_title(title: "Example component default")
+    render(ExampleComponent.new(title: title))
   end
 end
 ```
 
-Which enables passing in a value with <http://localhost:3000/rails/components/test_component/with_dynamic_title?title=Custom+title>.
+Which enables passing in a value with <http://localhost:3000/rails/view_components/example_component/with_dynamic_title?title=Custom+title>.
 
 The `ViewComponent::Preview` base class includes
 [`ActionView::Helpers::TagHelper`](https://api.rubyonrails.org/classes/ActionView/Helpers/TagHelper.html), which provides the [`tag`](https://api.rubyonrails.org/classes/ActionView/Helpers/TagHelper.html#method-i-tag)
@@ -802,10 +798,10 @@ and [`content_tag`](https://api.rubyonrails.org/classes/ActionView/Helpers/TagHe
 
 Previews use the application layout by default, but can use a specific layout with the `layout` option:
 
-`test/components/previews/test_component_preview.rb`
+`test/components/previews/example_component_preview.rb`
 
 ```ruby
-class TestComponentPreview < ViewComponent::Preview
+class ExampleComponentPreview < ViewComponent::Preview
   layout "admin"
 
   ...
@@ -892,7 +888,7 @@ class CellComponentPreview < ViewComponent::Preview
 end
 ```
 
-Which enables passing in a value with <http://localhost:3000/rails/components/cell_component/default?title=Custom+title&subtitle=Another+subtitle>.
+Which enables passing in a value with <http://localhost:3000/rails/view_components/cell_component/default?title=Custom+title&subtitle=Another+subtitle>.
 
 #### Configuring preview controller
 
@@ -904,14 +900,34 @@ Previews can be extended to allow users to add authentication, authorization, be
 config.view_component.preview_controller = "MyPreviewController"
 ```
 
-#### Configuring TestController
+### Configuring the controller used in tests
 
-Component tests assume the existence of an `ApplicationController` class, which be can be configured using the `test_controller` option:
-
-`config/application.rb`
+Component tests assume the existence of an `ApplicationController` class, which can be configured globally using the `test_controller` option:
 
 ```ruby
 config.view_component.test_controller = "BaseController"
+```
+
+To configure the controller used for a test case, use `with_controller_class` from `ViewComponent::TestHelpers`.
+
+```ruby
+class ExampleComponentTest < ViewComponent::TestCase
+  def test_component_in_public_controller
+    with_controller_class PublicController do
+      render_inline ExampleComponent.new
+
+      assert_text "foo"
+    end
+  end
+
+  def test_component_in_authenticated_controller
+    with_controller_class AuthenticatedController do
+      render_inline ExampleComponent.new
+
+      assert_text "bar"
+    end
+  end
+end
 ```
 
 ### Setting up RSpec
@@ -950,11 +966,64 @@ With the monkey patch disabled, use `render_component` (or  `render_component_to
 <%= render_component Component.new(message: "bar") %>
 ```
 
-### Sidecar assets (experimental)
+### Sidecar CSS (experimental)
 
-It’s possible to include Javascript and CSS alongside components, sometimes called "sidecar" assets or files.
+_Note: This feature is experimental. Breaking changes should be expected without warning._
 
-To use the Webpacker gem to compile sidecar assets located in `app/components`:
+ViewComponent includes experimental support for encapsulated sidecar CSS, locally scoping CSS selectors using CSS Modules.
+
+To use the experimental feature, include `ViewComponent::Styleable`:
+
+`app/components/styleable_component.rb`:
+
+```ruby
+class StyleableComponent < ViewComponent::Base
+  include ViewComponent::Styleable
+end
+```
+
+Add a sidecar stylesheet for the component:
+
+`app/components/styleable_component.css`:
+
+```css
+.foo {
+  color: red;
+}
+```
+
+Use `styles` to retrieve the scoped selector:
+
+`app/components/styleable_component.rb`:
+
+```ruby
+class StyleableComponent < ViewComponent::Base
+  include ViewComponent::Styleable
+
+  def call
+    content_tag(:div, "Hello, World!", class: styles['foo'])
+  end
+end
+```
+
+Render the component in a view:
+
+```erb
+<%= render(StyleableComponent.new) %>
+```
+
+Returning:
+
+```html
+<div class="Css_0343d_foo">Hello, World!</div>
+<style>.Css_0343d_foo { color: red; }</style>
+```
+
+### Sidecar javascript (experimental)
+
+It’s possible to include Javascript alongside components.
+
+To use the Webpacker gem to compile javascript located in `app/components`:
 
 1. In `config/webpacker.yml`, add `"app/components"` to the `resolved_paths` array (e.g. `resolved_paths: ["app/components"]`).
 2. In the Webpack entry file (often `app/javascript/packs/application.js`), add an import statement to a helper file, and in the helper file, import the components' Javascript:
@@ -970,112 +1039,22 @@ function importAll(r) {
   r.keys().forEach(r)
 }
 
-importAll(require.context("../components", true, /_component.js$/))
+importAll(require.context("../components", true, /[_\/]component\.js$/))
 ```
 
-Any file with the `_component.js` suffix (such as `app/components/widget_component.js`) will be compiled into the Webpack bundle. If that file itself imports another file, for example `app/components/widget_component.css`, it will also be compiled and bundled into Webpack's output stylesheet if Webpack is being used for styles.
+Any file with the `_component.js` suffix (such as `app/components/widget_component.js`) will be compiled into the Webpack bundle.
 
-#### Encapsulating sidecar assets
-
-Ideally, sidecar Javascript/CSS should not "leak" out of the context of its associated component.
-
-One approach is to use Web Components, which contain all Javascript functionality, internal markup, and styles within the shadow root of the Web Component.
-
-For example:
-
-`app/components/comment_component.rb`
-
-```ruby
-class CommentComponent < ViewComponent::Base
-  def initialize(comment:)
-    @comment = comment
-  end
-
-  def commenter
-    @comment.user
-  end
-
-  def commenter_name
-    commenter.name
-  end
-
-  def avatar
-    commenter.avatar_image_url
-  end
-
-  def formatted_body
-    simple_format(@comment.body)
-  end
-
-  private
-
-  attr_reader :comment
-end
-```
-
-`app/components/comment_component.html.erb`
-
-```erb
-<my-comment comment-id="<%= comment.id %>">
-  <time slot="posted" datetime="<%= comment.created_at.iso8601 %>"><%= comment.created_at.strftime("%b %-d") %></time>
-
-  <div slot="avatar"><img src="<%= avatar %>" /></div>
-
-  <div slot="author"><%= commenter_name %></div>
-
-  <div slot="body"><%= formatted_body %></div>
-</my-comment>
-```
-
-`app/components/comment_component.js`
-
-```js
-class Comment extends HTMLElement {
-  styles() {
-    return `
-      :host {
-        display: block;
-      }
-      ::slotted(time) {
-        float: right;
-        font-size: 0.75em;
-      }
-      .commenter { font-weight: bold; }
-      .body { … }
-    `
-  }
-
-  constructor() {
-    super()
-    const shadow = this.attachShadow({mode: 'open'});
-    shadow.innerHTML = `
-      <style>
-        ${this.styles()}
-      </style>
-      <slot name="posted"></slot>
-      <div class="commenter">
-        <slot name="avatar"></slot> <slot name="author"></slot>
-      </div>
-      <div class="body">
-        <slot name="body"></slot>
-      </div>
-    `
-  }
-}
-customElements.define('my-comment', Comment)
-```
-
-##### Stimulus
+#### Stimulus
 
 In Stimulus, create a 1:1 mapping between a Stimulus controller and a component. In order to load in Stimulus controllers from the `app/components` tree, amend the Stimulus boot code in `app/javascript/packs/application.js`:
 
 ```js
 const application = Application.start()
-const context = require.context("controllers", true, /.js$/)
-const context_components = require.context("../../components", true, /_controller.js$/)
+const context = require.context("controllers", true, /\.js$/)
+const contextComponents = require.context("../../components", true, /_controller\.js$/)
 application.load(
   definitionsFromContext(context).concat(
-    definitionsFromContext(context_components)
+    definitionsFromContext(contextComponents)
   )
 )
 ```
@@ -1113,7 +1092,7 @@ app/components
 
 ## Known issues
 
-### form_for compatiblilty
+### form_for compatibility
 
 ViewComponent is [not currently compatible](https://github.com/github/view_component/issues/241) with `form_for` helpers.
 
@@ -1158,6 +1137,7 @@ ViewComponent is far from a novel idea! Popular implementations of view componen
 - [Rails to Introduce View Components, Dev.to](https://dev.to/andy/rails-to-introduce-view-components-3ome)
 - [ActionView::Components in Rails 6.1, Drifting Ruby](https://www.driftingruby.com/episodes/actionview-components-in-rails-6-1)
 - [Demo repository, view-component-demo](https://github.com/joelhawksley/view-component-demo)
+- [Introducing ViewComponent - The Next Level In Rails Views](https://teamhq.app/blog/tech/15-introducing-viewcomponent-the-next-level-in-rails-views)
 
 ## Contributing
 
@@ -1167,52 +1147,57 @@ This project is intended to be a safe, welcoming space for collaboration. Contri
 
 ViewComponent is built by:
 
-|<img src="https://avatars.githubusercontent.com/joelhawksley?s=256" alt="joelhawksley" width="128" />|<img src="https://avatars.githubusercontent.com/tenderlove?s=256" alt="tenderlove" width="128" />|<img src="https://avatars.githubusercontent.com/jonspalmer?s=256" alt="jonspalmer" width="128" />|<img src="https://avatars.githubusercontent.com/juanmanuelramallo?s=256" alt="juanmanuelramallo" width="128" />|<img src="https://avatars.githubusercontent.com/vinistock?s=256" alt="vinistock" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@joelhawksley|@tenderlove|@jonspalmer|@juanmanuelramallo|@vinistock|
-|Denver|Seattle|Boston||Toronto|
-
-|<img src="https://avatars.githubusercontent.com/metade?s=256" alt="metade" width="128" />|<img src="https://avatars.githubusercontent.com/asgerb?s=256" alt="asgerb" width="128" />|<img src="https://avatars.githubusercontent.com/xronos-i-am?s=256" alt="xronos-i-am" width="128" />|<img src="https://avatars.githubusercontent.com/dylnclrk?s=256" alt="dylnclrk" width="128" />|<img src="https://avatars.githubusercontent.com/kaspermeyer?s=256" alt="kaspermeyer" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@metade|@asgerb|@xronos-i-am|@dylnclrk|@kaspermeyer|
-|London|Copenhagen|Russia, Kirov|Berkeley, CA|Denmark|
-
-|<img src="https://avatars.githubusercontent.com/rdavid1099?s=256" alt="rdavid1099" width="128" />|<img src="https://avatars.githubusercontent.com/kylefox?s=256" alt="kylefox" width="128" />|<img src="https://avatars.githubusercontent.com/traels?s=256" alt="traels" width="128" />|<img src="https://avatars.githubusercontent.com/rainerborene?s=256" alt="rainerborene" width="128" />|<img src="https://avatars.githubusercontent.com/jcoyne?s=256" alt="jcoyne" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@rdavid1099|@kylefox|@traels|@rainerborene|@jcoyne|
-|Los Angeles|Edmonton|Odense, Denmark|Brazil|Minneapolis|
-
-|<img src="https://avatars.githubusercontent.com/elia?s=256" alt="elia" width="128" />|<img src="https://avatars.githubusercontent.com/cesariouy?s=256" alt="cesariouy" width="128" />|<img src="https://avatars.githubusercontent.com/spdawson?s=256" alt="spdawson" width="128" />|<img src="https://avatars.githubusercontent.com/rmacklin?s=256" alt="rmacklin" width="128" />|<img src="https://avatars.githubusercontent.com/michaelem?s=256" alt="michaelem" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@elia|@cesariouy|@spdawson|@rmacklin|@michaelem|
-|Milan||United Kingdom||Berlin|
-
-|<img src="https://avatars.githubusercontent.com/mellowfish?s=256" alt="mellowfish" width="128" />|<img src="https://avatars.githubusercontent.com/horacio?s=256" alt="horacio" width="128" />|<img src="https://avatars.githubusercontent.com/dukex?s=256" alt="dukex" width="128" />|<img src="https://avatars.githubusercontent.com/dark-panda?s=256" alt="dark-panda" width="128" />|<img src="https://avatars.githubusercontent.com/smashwilson?s=256" alt="smashwilson" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@mellowfish|@horacio|@dukex|@dark-panda|@smashwilson|
-|Spring Hill, TN|Buenos Aires|São Paulo||Gambrills, MD|
-
-|<img src="https://avatars.githubusercontent.com/blakewilliams?s=256" alt="blakewilliams" width="128" />|<img src="https://avatars.githubusercontent.com/seanpdoyle?s=256" alt="seanpdoyle" width="128" />|<img src="https://avatars.githubusercontent.com/tclem?s=256" alt="tclem" width="128" />|<img src="https://avatars.githubusercontent.com/nashby?s=256" alt="nashby" width="128" />|<img src="https://avatars.githubusercontent.com/jaredcwhite?s=256" alt="jaredcwhite" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@blakewilliams|@seanpdoyle|@tclem|@nashby|@jaredcwhite|
-|Boston, MA|New York, NY|San Francisco, CA|Minsk|Portland, OR|
-
-|<img src="https://avatars.githubusercontent.com/simonrand?s=256" alt="simonrand" width="128" />|<img src="https://avatars.githubusercontent.com/fugufish?s=256" alt="fugufish" width="128" />|<img src="https://avatars.githubusercontent.com/cover?s=256" alt="cover" width="128" />|<img src="https://avatars.githubusercontent.com/franks921?s=256" alt="franks921" width="128" />|<img src="https://avatars.githubusercontent.com/fsateler?s=256" alt="fsateler" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@simonrand|@fugufish|@cover|@franks921|@fsateler|
-|Dublin, Ireland|Salt Lake City, Utah|Barcelona|South Africa|Chile|
-
-|<img src="https://avatars.githubusercontent.com/maxbeizer?s=256" alt="maxbeizer" width="128" />|<img src="https://avatars.githubusercontent.com/franco?s=256" alt="franco" width="128" />|<img src="https://avatars.githubusercontent.com/tbroad-ramsey?s=256" alt="tbroad-ramsey" width="128" />|<img src="https://avatars.githubusercontent.com/jensljungblad?s=256" alt="jensljungblad" width="128" />|<img src="https://avatars.githubusercontent.com/bbugh?s=256" alt="bbugh" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@maxbeizer|@franco|@tbroad-ramsey|@jensljungblad|@bbugh|
-|Nashville, TN|Switzerland|Spring Hill, TN|New York, NY|Austin, TX|
-
-|<img src="https://avatars.githubusercontent.com/johannesengl?s=256" alt="johannesengl" width="128" />|<img src="https://avatars.githubusercontent.com/czj?s=256" alt="czj" width="128" />|<img src="https://avatars.githubusercontent.com/mrrooijen?s=256" alt="mrrooijen" width="128" />|<img src="https://avatars.githubusercontent.com/bradparker?s=256" alt="bradparker" width="128" />|<img src="https://avatars.githubusercontent.com/mattbrictson?s=256" alt="mattbrictson" width="128" />|
-|:---:|:---:|:---:|:---:|:---:|
-|@johannesengl|@czj|@mrrooijen|@bradparker|@mattbrictson|
-|Berlin, Germany|Paris, France|The Netherlands|Brisbane, Australia|San Francisco|
-
-|<img src="https://avatars.githubusercontent.com/mixergtz?s=256" alt="mixergtz" width="128" />|<img src="https://avatars.githubusercontent.com/jules2689?s=256" alt="jules2689" width="128" />|<img src="https://avatars.githubusercontent.com/g13ydson?s=256" alt="g13ydson" width="128" />|<img src="https://avatars.githubusercontent.com/swanson?s=256" alt="swanson" width="128" />|
-|:---:|:---:|:---:|:---:|
-|@mixergtz|@jules2689|@g13ydson|@swanson|
-|Medellin, Colombia|Toronto, Canada|João Pessoa, Brazil|Indianapolis, IN|
+|        | Name | Location |
+|--------|--------|--------|
+|<img src="https://avatars.githubusercontent.com/asgerb?s=128" alt="asgerb" width="64" />|@asgerb|Copenhagen|
+|<img src="https://avatars.githubusercontent.com/bbugh?s=128" alt="bbugh" width="64" />|@bbugh|Austin, TX|
+|<img src="https://avatars.githubusercontent.com/blakewilliams?s=128" alt="blakewilliams" width="64" />|@blakewilliams|Boston, MA|
+|<img src="https://avatars.githubusercontent.com/bobmaerten?s=128" alt="bobmaerten" width="64" />|@bobmaerten|Valenciennes, France|
+|<img src="https://avatars.githubusercontent.com/bradparker?s=128" alt="bradparker" width="64" />|@bradparker|Brisbane, Australia|
+|<img src="https://avatars.githubusercontent.com/cesariouy?s=128" alt="cesariouy" width="64" />|@cesariouy||
+|<img src="https://avatars.githubusercontent.com/cover?s=128" alt="cover" width="64" />|@cover|Barcelona|
+|<img src="https://avatars.githubusercontent.com/czj?s=128" alt="czj" width="64" />|@czj|Paris, France|
+|<img src="https://avatars.githubusercontent.com/dark-panda?s=128" alt="dark-panda" width="64" />|@dark-panda||
+|<img src="https://avatars.githubusercontent.com/dukex?s=128" alt="dukex" width="64" />|@dukex|São Paulo|
+|<img src="https://avatars.githubusercontent.com/dylnclrk?s=128" alt="dylnclrk" width="64" />|@dylnclrk|Berkeley, CA|
+|<img src="https://avatars.githubusercontent.com/elia?s=128" alt="elia" width="64" />|@elia|Milan|
+|<img src="https://avatars.githubusercontent.com/franco?s=128" alt="franco" width="64" />|@franco|Switzerland|
+|<img src="https://avatars.githubusercontent.com/franks921?s=128" alt="franks921" width="64" />|@franks921|South Africa|
+|<img src="https://avatars.githubusercontent.com/fsateler?s=128" alt="fsateler" width="64" />|@fsateler|Chile|
+|<img src="https://avatars.githubusercontent.com/fugufish?s=128" alt="fugufish" width="64" />|@fugufish|Salt Lake City, Utah|
+|<img src="https://avatars.githubusercontent.com/g13ydson?s=128" alt="g13ydson" width="64" />|@g13ydson|João Pessoa, Brazil|
+|<img src="https://avatars.githubusercontent.com/horacio?s=128" alt="horacio" width="64" />|@horacio|Buenos Aires|
+|<img src="https://avatars.githubusercontent.com/jaredcwhite?s=128" alt="jaredcwhite" width="64" />|@jaredcwhite|Portland, OR|
+|<img src="https://avatars.githubusercontent.com/jcoyne?s=128" alt="jcoyne" width="64" />|@jcoyne|Minneapolis|
+|<img src="https://avatars.githubusercontent.com/jensljungblad?s=128" alt="jensljungblad" width="64" />|@jensljungblad|New York, NY|
+|<img src="https://avatars.githubusercontent.com/joelhawksley?s=128" alt="joelhawksley" width="64" />|@joelhawksley|Denver|
+|<img src="https://avatars.githubusercontent.com/johannesengl?s=128" alt="johannesengl" width="64" />|@johannesengl|Berlin, Germany|
+|<img src="https://avatars.githubusercontent.com/jonspalmer?s=128" alt="jonspalmer" width="64" />|@jonspalmer|Boston|
+|<img src="https://avatars.githubusercontent.com/juanmanuelramallo?s=128" alt="juanmanuelramallo" width="64" />|@juanmanuelramallo||
+|<img src="https://avatars.githubusercontent.com/jules2689?s=128" alt="jules2689" width="64" />|@jules2689|Toronto, Canada|
+|<img src="https://avatars.githubusercontent.com/kaspermeyer?s=128" alt="kaspermeyer" width="64" />|@kaspermeyer|Denmark|
+|<img src="https://avatars.githubusercontent.com/kylefox?s=128" alt="kylefox" width="64" />|@kylefox|Edmonton|
+|<img src="https://avatars.githubusercontent.com/mattbrictson?s=128" alt="mattbrictson" width="64" />|@mattbrictson|San Francisco|
+|<img src="https://avatars.githubusercontent.com/maxbeizer?s=128" alt="maxbeizer" width="64" />|@maxbeizer|Nashville, TN|
+|<img src="https://avatars.githubusercontent.com/mellowfish?s=128" alt="mellowfish" width="64" />|@mellowfish|Spring Hill, TN|
+|<img src="https://avatars.githubusercontent.com/metade?s=128" alt="metade" width="64" />|@metade|London|
+|<img src="https://avatars.githubusercontent.com/michaelem?s=128" alt="michaelem" width="64" />|@michaelem|Berlin|
+|<img src="https://avatars.githubusercontent.com/mixergtz?s=128" alt="mixergtz" width="64" />|@mixergtz|Medellin, Colombia|
+|<img src="https://avatars.githubusercontent.com/mrrooijen?s=128" alt="mrrooijen" width="64" />|@mrrooijen|The Netherlands|
+|<img src="https://avatars.githubusercontent.com/nashby?s=128" alt="nashby" width="64" />|@nashby|Minsk|
+|<img src="https://avatars.githubusercontent.com/nielsslot?s=128" alt="nshki" width="64" />|@nielsslot|Amsterdam|
+|<img src="https://avatars.githubusercontent.com/nshki?s=128" alt="nshki" width="64" />|@nshki|Los Angeles, CA|
+|<img src="https://avatars.githubusercontent.com/rainerborene?s=128" alt="rainerborene" width="64" />|@rainerborene|Brazil|
+|<img src="https://avatars.githubusercontent.com/rdavid1099?s=128" alt="rdavid1099" width="64" />|@rdavid1099|Los Angeles|
+|<img src="https://avatars.githubusercontent.com/rmacklin?s=128" alt="rmacklin" width="64" />|@rmacklin||
+|<img src="https://avatars.githubusercontent.com/seanpdoyle?s=128" alt="seanpdoyle" width="64" />|@seanpdoyle|New York, NY|
+|<img src="https://avatars.githubusercontent.com/simonrand?s=128" alt="simonrand" width="64" />|@simonrand|Dublin, Ireland|
+|<img src="https://avatars.githubusercontent.com/smashwilson?s=128" alt="smashwilson" width="64" />|@smashwilson|Gambrills, MD|
+|<img src="https://avatars.githubusercontent.com/spdawson?s=128" alt="spdawson" width="64" />|@spdawson|United Kingdom|
+|<img src="https://avatars.githubusercontent.com/swanson?s=128" alt="swanson" width="64" />|@swanson|Indianapolis, IN|
+|<img src="https://avatars.githubusercontent.com/tbroad-ramsey?s=128" alt="tbroad-ramsey" width="64" />|@tbroad-ramsey|Spring Hill, TN|
+|<img src="https://avatars.githubusercontent.com/tclem?s=128" alt="tclem" width="64" />|@tclem|San Francisco, CA|
+|<img src="https://avatars.githubusercontent.com/tenderlove?s=128" alt="tenderlove" width="64" />|@tenderlove|Seattle|
+|<img src="https://avatars.githubusercontent.com/traels?s=128" alt="traels" width="64" />|@traels|Odense, Denmark|
+|<img src="https://avatars.githubusercontent.com/vinistock?s=128" alt="vinistock" width="64" />|@vinistock|Toronto|
+|<img src="https://avatars.githubusercontent.com/xronos-i-am?s=128" alt="xronos-i-am" width="64" />|@xronos-i-am|Russia, Kirov|
