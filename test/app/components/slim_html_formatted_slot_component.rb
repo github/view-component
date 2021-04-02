@@ -1,4 +1,4 @@
 # frozen_string_literal: true
 
-class SlimHTMLFormattedSlotComponent < ViewComponent::Base
+class SlimHtmlFormattedSlotComponent < ViewComponent::Base
 end
