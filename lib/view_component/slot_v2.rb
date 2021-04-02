@@ -22,17 +22,25 @@ module ViewComponent
     # If there is no slot renderable, we evaluate the block passed to
     # the slot and return it.
     def to_s
+      return @content if defined?(@content)
+
       view_context = @parent.send(:view_context)
-      view_context.capture do
+      @content = view_context.capture do
         if defined?(@_component_instance)
           # render_in is faster than `parent.render`
-          @_component_instance.render_in(view_context, &@_content_block)
+          if defined?(@_content_block)
+            @_component_instance.render_in(view_context, &@_content_block)
+          else
+            @_component_instance.render_in(view_context)
+          end
         elsif defined?(@_content)
           @_content
         elsif defined?(@_content_block)
           @_content_block.call
         end
       end
+
+      @content
     end
 
     # Allow access to public component methods via the wrapper
@@ -56,6 +64,10 @@ module ViewComponent
     #
     def method_missing(symbol, *args, &block)
       @_component_instance.public_send(symbol, *args, &block)
+    end
+
+    def html_safe?
+      to_s.html_safe?
     end
 
     def respond_to_missing?(symbol, include_all = false)
