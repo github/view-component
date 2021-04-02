@@ -7,6 +7,7 @@ module ViewComponent
 
   autoload :Base
   autoload :Compiler
+  autoload :Deprecation
   autoload :Preview
   autoload :PreviewTemplateError
   autoload :TestHelpers
