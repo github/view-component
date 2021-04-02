@@ -35,7 +35,7 @@ module ViewComponent
     end
 
     def controller
-      @controller ||= Base.test_controller.constantize.new.tap { |c| c.request = request }.extend(Rails.application.routes.url_helpers)
+      @controller ||= build_controller(Base.test_controller.constantize)
     end
 
     def request
@@ -47,7 +47,21 @@ module ViewComponent
 
       controller.view_context.lookup_context.variants = variant
       yield
+    ensure
       controller.view_context.lookup_context.variants = old_variants
+    end
+
+    def with_controller_class(klass)
+      old_controller = defined?(@controller) && @controller
+
+      @controller = build_controller(klass)
+      yield
+    ensure
+      @controller = old_controller
+    end
+
+    def build_controller(klass)
+      klass.new.tap { |c| c.request = request }.extend(Rails.application.routes.url_helpers)
     end
   end
 end
