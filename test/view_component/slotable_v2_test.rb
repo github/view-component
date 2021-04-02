@@ -196,7 +196,7 @@ class SlotsV2sTest < ViewComponent::TestCase
   end
 
   def test_renders_nested_content_in_order
-    render_inline TitleWrapperComponent.new(content: "Hello world!")
+    render_inline TitleWrapperComponent.new(title: "Hello world!")
 
     assert_selector("h1", text: /Hello world/)
     assert_text(/Hello world/, count: 1)
@@ -207,9 +207,58 @@ class SlotsV2sTest < ViewComponent::TestCase
   # was accidentally assigned to all components!
   def test_sub_components_pollution
     new_component_class = Class.new(ViewComponent::Base)
-    new_component_class.include(ViewComponent::SlotableV2)
     # this returned:
     # [SlotsV2Component::Subtitle, SlotsV2Component::Tab...]
     assert_empty new_component_class.registered_slots
+  end
+
+  def test_renders_slots_with_before_render_hook
+    render_inline(SlotsV2BeforeRenderComponent.new) do |component|
+      component.title do
+        "This is my title!"
+      end
+
+      component.greeting do
+        "John Doe"
+      end
+      component.greeting do
+        "Jane Doe"
+      end
+    end
+
+    assert_selector("h1", text: "Testing - This is my title!")
+    assert_selector(".greeting", text: "Hello, John Doe")
+    assert_selector(".greeting", text: "Hello, Jane Doe")
+  end
+
+  def test_slots_accessible_in_render_predicate
+    render_inline(SlotsV2RenderPredicateComponent.new) do |component|
+      component.title do
+        "This is my title!"
+      end
+    end
+
+    assert_selector("h1", text: "This is my title!")
+  end
+
+  def test_slots_without_render_block
+    render_inline(SlotsV2WithoutContentBlockComponent.new) do |component|
+      component.title(title: "This is my title!")
+    end
+
+    assert_selector("h1", text: "This is my title!")
+  end
+
+  def test_slot_with_block_content
+    render_inline(SlotsV2BlockComponent.new)
+
+    assert_selector("p", text: "Footer part 1")
+    assert_selector("p", text: "Footer part 2")
+  end
+
+  def test_lambda_slot_with_missing_block
+    render_inline(SlotsV2Component.new(classes: "mt-4")) do |component|
+      component.footer(classes: "text-blue")
+    end
   end
 end
