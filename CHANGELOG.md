@@ -1,6 +1,152 @@
 # CHANGELOG
 
-## master
+## main
+
+* Experimental: add `ViewComponent::Styleable` for encapsulated CSS.
+
+    *Joel Hawksley*
+
+* Experimental: call `._sidecar_files` to fetch the sidecar files for a given list of extensions, e.g. passing `["yml", "yaml"]`.
+
+    *Elia Schito*
+
+* Fix bug where a single `jbuilder` template matched multiple template handlers.
+
+    *Niels Slot*
+
+## 2.28.0
+
+* Include SlotableV2 by default in Base. **Note:** It's no longer necessary to include `ViewComponent::SlotableV2` to use Slots.
+
+    *Joel Hawksley*
+
+* Prepend Preview routes instead of appending, accounting for cases where host application has catchall route.
+
+    *Joel Hawksley*
+
+* Fix bug where blocks passed to lambda slots will render incorrectly in certain situations.
+
+    *Blake Williams*
+
+## 2.27.0
+
+* Allow customization of the controller used in component tests.
+
+    *Alex Robbin*
+
+* Generate preview at overridden path if one exists when using `--preview` flag.
+
+    *Nishiki Liu*
+
+## 2.26.1
+
+* Fix bug that raises when trying to use a collection before the component has been compiled.
+
+    *Blake Williams*
+
+## 2.26.0
+
+* Lazily evaluate component `content` in `render?`, preventing the `content` block from being evaluated when `render?` returns false.
+
+    *Blake Williams*
+
+* Do not generate template when using `--inline` flag.
+
+    *Hans Lemuet*
+
+* Add `--inline` option to the Haml and Slim generators
+
+    *Hans Lemuet*
+
+## 2.25.1
+
+* Experimental: call `._after_compile` class method after a component is compiled.
+
+    *Joel Hawksley*
+
+* Fix bug where SlotV2 was rendered as an HTML string when using Slim.
+
+    *Manuel Puyol*
+
+## 2.25.0
+
+* Add `--preview` generator option to create an associated preview file.
+
+    *Bob Maerten*
+
+* Add argument validation to avoid `content` override.
+
+    *Manuel Puyol*
+
+## 2.24.0
+
+* Add `--inline` option to the erb generator. Prevents default erb template from being created and creates a component with a call method.
+
+    *Nachiket Pusalkar*
+
+* Add test case for checking presence of `content` in `#render?`.
+
+    *Joel Hawksley*
+
+* Rename `master` branch to `main`.
+
+    *Joel Hawksley*
+
+## 2.23.2
+
+* Fix bug where rendering a component `with_collection` from a controller raised an error.
+
+    *Joel Hawksley*
+
+## 2.23.1
+
+* Fixed out-of-order rendering bug in `ActionView::SlotableV2`
+
+    *Blake Williams*
+
+## 2.23.0
+
+* Add `ActionView::SlotableV2`
+  * `with_slot` becomes `renders_one`.
+  * `with_slot collection: true` becomes `renders_many`.
+  * Slot definitions now accept either a component class, component class name, or a lambda instead of a `class_name:` keyword argument.
+  * Slots now support positional arguments.
+  * Slots no longer use the `content` attribute to render content, instead relying on `to_s`. e.g. `<%= my_slot %>`.
+  * Slot values are no longer set via the `slot` method, and instead use the name of the slot.
+
+    *Blake Williams*
+
+* Add `frozen_string_literal: true` to generated component template.
+
+    *Max Beizer*
+
+## 2.22.1
+
+* Revert refactor that broke rendering for some users.
+
+    *Joel Hawksley*
+
+## 2.22.0
+
+* Add #with_variant to enable inline component variant rendering without template files.
+
+    *Nathan Jones*
+
+## 2.21.0
+
+* Only compile components at application initialization if eager loading is enabled.
+
+    *Joel Hawksley*
+
+## 2.20.0
+
+* Don't add `/test/components/previews` to preview_paths if directory doesn't exist.
+
+    *Andy Holland*
+
+* Add `preview_controller` option to override the controller used for component previews.
+
+    *Matt Swanson, Blake Williams, Juan Manuel Ramallo*
 
 ## 2.19.1
 
