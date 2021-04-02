@@ -1,4 +1,4 @@
 # frozen_string_literal: true
 
-class InheritedInlineComponent < InlineComponent
+class InlineInheritedComponent < InlineComponent
 end
