@@ -13,12 +13,6 @@ module ViewComponent
   class Base < ActionView::Base
     include ActiveSupport::Configurable
     include ViewComponent::Previewable
-    include ViewComponent::SlotableV2
-
-    ViewContextCalledBeforeRenderError = Class.new(StandardError)
-
-    RESERVED_PARAMETER = :content
-
     # For CSRF authenticity tokens in forms
     delegate :form_authenticity_token, :protect_against_forgery?, :config, to: :helpers
 
@@ -86,7 +80,6 @@ module ViewComponent
       before_render
 
       if render?
-        render_template_for(@variant) + _after_render
       else
         ""
       end
@@ -212,46 +205,6 @@ module ViewComponent
 
     class << self
       attr_accessor :source_location, :virtual_path
-
-      # EXPERIMENTAL: This API is experimental and may be removed at any time.
-      # Find sidecar files for the given extensions.
-      #
-      # The provided array of extensions is expected to contain
-      # strings starting without the "dot", example: `["erb", "haml"]`.
-      #
-      # For example, one might collect sidecar CSS files that need to be compiled.
-      def _sidecar_files(extensions)
-        return [] unless source_location
-
-        extensions = extensions.join(",")
-
-        # view files in a directory named like the component
-        directory = File.dirname(source_location)
-        filename = File.basename(source_location, ".rb")
-        component_name = name.demodulize.underscore
-
-        # Add support for nested components defined in the same file.
-        #
-        # e.g.
-        #
-        # class MyComponent < ViewComponent::Base
-        #   class MyOtherComponent < ViewComponent::Base
-        #   end
-        # end
-        #
-        # Without this, `MyOtherComponent` will not look for `my_component/my_other_component.html.erb`
-        nested_component_files = if name.include?("::") && component_name != filename
-          Dir["#{directory}/#{filename}/#{component_name}.*{#{extensions}}"]
-        else
-          []
-        end
-
-        # view files in the same directory as the component
-        sidecar_files = Dir["#{directory}/#{component_name}.*{#{extensions}}"]
-
-        sidecar_directory_files = Dir["#{directory}/#{component_name}/#{filename}.*{#{extensions}}"]
-
-        (sidecar_files - [source_location] + sidecar_directory_files + nested_component_files).uniq
       end
 
       # Render a component collection.
