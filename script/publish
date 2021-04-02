@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Publish gem
+bundle exec rake release
