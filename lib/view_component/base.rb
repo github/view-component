@@ -12,6 +12,7 @@ module ViewComponent
   class Base < ActionView::Base
     include ActiveSupport::Configurable
     include ViewComponent::Previewable
+    include ViewComponent::SlotableV2
 
     ViewContextCalledBeforeRenderError = Class.new(StandardError)
 
@@ -78,8 +79,8 @@ module ViewComponent
       old_current_template = @current_template
       @current_template = self
 
-      # Assign captured content passed to component as a block to @content
-      @content = view_context.capture(self, &block) if block_given?
+      @_content_evaluated = false
+      @_render_in_block = block
 
       before_render
 
@@ -130,7 +131,7 @@ module ViewComponent
       @helpers ||= controller.view_context
     end
 
-    # Exposes .virutal_path as an instance method
+    # Exposes .virtual_path as an instance method
     def virtual_path
       self.class.virtual_path
     end
@@ -177,11 +178,25 @@ module ViewComponent
       @request ||= controller.request
     end
 
-    attr_reader :content, :view_context
+    attr_reader :view_context
+
+    def content
+      return @_content if defined?(@_content)
+      @_content_evaluated = true
+
+      @_content = if @view_context && @_render_in_block
+        view_context.capture(self, &@_render_in_block)
+      end
+    end
+
+    def content_evaluated?
+      @_content_evaluated
+    end
 
     # The controller used for testing components.
-    # Defaults to ApplicationController. This should be set early
-    # in the initialization process and should be set to a string.
+    # Defaults to ApplicationController, but can be configured
+    # on a per-test basis using `with_controller_class`.
+    # This should be set early in the initialization process and should be a string.
     mattr_accessor :test_controller
     @@test_controller = "ApplicationController"
 
@@ -190,6 +205,47 @@ module ViewComponent
 
     class << self
       attr_accessor :source_location, :virtual_path
+
+      # EXPERIMENTAL: This API is experimental and may be removed at any time.
+      # Find sidecar files for the given extensions.
+      #
+      # The provided array of extensions is expected to contain
+      # strings starting without the "dot", example: `["erb", "haml"]`.
+      #
+      # For example, one might collect sidecar CSS files that need to be compiled.
+      def _sidecar_files(extensions)
+        return [] unless source_location
+
+        extensions = extensions.join(",")
+
+        # view files in a directory named like the component
+        directory = File.dirname(source_location)
+        filename = File.basename(source_location, ".rb")
+        component_name = name.demodulize.underscore
+
+        # Add support for nested components defined in the same file.
+        #
+        # e.g.
+        #
+        # class MyComponent < ViewComponent::Base
+        #   class MyOtherComponent < ViewComponent::Base
+        #   end
+        # end
+        #
+        # Without this, `MyOtherComponent` will not look for `my_component/my_other_component.html.erb`
+        nested_component_files = if name.include?("::") && component_name != filename
+          Dir["#{directory}/#{filename}/#{component_name}.*{#{extensions}}"]
+        else
+          []
+        end
+
+        # view files in the same directory as the component
+        sidecar_files = Dir["#{directory}/#{component_name}.*{#{extensions}}"]
+
+        sidecar_directory_files = Dir["#{directory}/#{component_name}/#{filename}.*{#{extensions}}"]
+
+        (sidecar_files - [source_location] + sidecar_directory_files + nested_component_files).uniq
+      end
 
       # Render a component collection.
       def with_collection(collection, **args)
@@ -256,7 +312,14 @@ module ViewComponent
         if areas.include?(:content)
           raise ArgumentError.new ":content is a reserved content area name. Please use another name, such as ':body'"
         end
-        attr_reader(*areas)
+
+        areas.each do |area|
+          define_method area.to_sym do
+            content unless content_evaluated? # ensure content is loaded so content_areas will be defined
+            instance_variable_get(:"@#{area}") if instance_variable_defined?(:"@#{area}")
+          end
+        end
+
         self.content_areas = areas
       end
 
@@ -302,6 +365,22 @@ module ViewComponent
           "`#{RESERVED_PARAMETER}` since it will override a " \
           "public ViewComponent method."
         )
+      end
+
+      def collection_parameter
+        if provided_collection_parameter
+          provided_collection_parameter
+        else
+          name && name.demodulize.underscore.chomp("_component").to_sym
+        end
+      end
+
+      def collection_counter_parameter
+        "#{collection_parameter}_counter".to_sym
+      end
+
+      def counter_argument_present?
+        instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
       end
 
       private

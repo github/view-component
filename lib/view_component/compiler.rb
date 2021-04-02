@@ -24,28 +24,6 @@ module ViewComponent
         )
       end
 
-      # Remove any existing singleton methods,
-      # as Ruby warns when redefining a method.
-      component_class.remove_possible_singleton_method(:collection_parameter)
-      component_class.remove_possible_singleton_method(:collection_counter_parameter)
-      component_class.remove_possible_singleton_method(:counter_argument_present?)
-
-      component_class.define_singleton_method(:collection_parameter) do
-        if provided_collection_parameter
-          provided_collection_parameter
-        else
-          name.demodulize.underscore.chomp("_component").to_sym
-        end
-      end
-
-      component_class.define_singleton_method(:collection_counter_parameter) do
-        "#{collection_parameter}_counter".to_sym
-      end
-
-      component_class.define_singleton_method(:counter_argument_present?) do
-        instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
-      end
-
       if raise_errors
         component_class.validate_initialization_parameters!
         component_class.validate_collection_parameter!
@@ -83,7 +61,7 @@ module ViewComponent
         "elsif variant.to_sym == :#{variant}\n    #{call_method_name(variant)}"
       end.join("\n")
 
-      component_class.class_eval <<-RUBY
+      component_class.class_eval <<-RUBY, __FILE__, __LINE__ + 1
         def render_template_for(variant = nil)
           if variant.nil?
             call
@@ -136,50 +114,18 @@ module ViewComponent
     end
 
     def templates
-      @templates ||= matching_views_in_source_location.each_with_object([]) do |path, memo|
-        pieces = File.basename(path).split(".")
+      @templates ||= begin
+        extensions = ActionView::Template.template_handler_extensions
 
-        memo << {
-          path: path,
-          variant: pieces.second.split("+").second&.to_sym,
-          handler: pieces.last
-        }
+        component_class._sidecar_files(extensions).each_with_object([]) do |path, memo|
+          pieces = File.basename(path).split(".")
+          memo << {
+            path: path,
+            variant: pieces.second.split("+").second&.to_sym,
+            handler: pieces.last
+          }
+        end
       end
-    end
-
-    def matching_views_in_source_location
-      source_location = component_class.source_location
-      return [] unless source_location
-
-      extensions = ActionView::Template.template_handler_extensions.join(",")
-
-      # view files in a directory named like the component
-      directory = File.dirname(source_location)
-      filename = File.basename(source_location, ".rb")
-      component_name = component_class.name.demodulize.underscore
-
-      # Add support for nested components defined in the same file.
-      #
-      # e.g.
-      #
-      # class MyComponent < ViewComponent::Base
-      #   class MyOtherComponent < ViewComponent::Base
-      #   end
-      # end
-      #
-      # Without this, `MyOtherComponent` will not look for `my_component/my_other_component.html.erb`
-      nested_component_files = if component_class.name.include?("::") && component_name != filename
-        Dir["#{directory}/#{filename}/#{component_name}.*{#{extensions}}"]
-      else
-        []
-      end
-
-      # view files in the same directory as the component
-      sidecar_files = Dir["#{directory}/#{component_name}.*{#{extensions}}"]
-
-      sidecar_directory_files = Dir["#{directory}/#{component_name}/#{filename}.*{#{extensions}}"]
-
-      (sidecar_files - [source_location] + sidecar_directory_files + nested_component_files)
     end
 
     def inline_calls

@@ -8,7 +8,11 @@ module Preview
       check_class_collision suffix: "ComponentPreview"
 
       def create_preview_file
-        template "component_preview.rb", File.join("test/components/previews", class_path, "#{file_name}_component_preview.rb")
+        preview_paths = Rails.application.config.view_component.preview_paths
+        return if preview_paths.count > 1
+
+        path_prefix = preview_paths.one? ? preview_paths.first : "test/components/previews"
+        template "component_preview.rb", File.join(path_prefix, class_path, "#{file_name}_component_preview.rb")
       end
 
       private

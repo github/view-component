@@ -196,7 +196,7 @@ class SlotsV2sTest < ViewComponent::TestCase
   end
 
   def test_renders_nested_content_in_order
-    render_inline TitleWrapperComponent.new(content: "Hello world!")
+    render_inline TitleWrapperComponent.new(title: "Hello world!")
 
     assert_selector("h1", text: /Hello world/)
     assert_text(/Hello world/, count: 1)
@@ -207,7 +207,6 @@ class SlotsV2sTest < ViewComponent::TestCase
   # was accidentally assigned to all components!
   def test_sub_components_pollution
     new_component_class = Class.new(ViewComponent::Base)
-    new_component_class.include(ViewComponent::SlotableV2)
     # this returned:
     # [SlotsV2Component::Subtitle, SlotsV2Component::Tab...]
     assert_empty new_component_class.registered_slots
@@ -231,24 +230,6 @@ class SlotsV2sTest < ViewComponent::TestCase
     assert_selector(".greeting", text: "Hello, John Doe")
     assert_selector(".greeting", text: "Hello, Jane Doe")
   end
-
-  def test_renders_slots_with_default_args
-    render_inline(SlotsV2WithDefaultArgsComponent.new) do |component|
-      component.icon
-    end
-
-    assert_selector(".container") do
-      assert_selector("img")
-    end
-  end
-
-  def test_renders_slots_when_passing_args
-    render_inline(SlotsV2WithDefaultArgsComponent.new) do |component|
-      component.icon(icon: "other-icon")
-    end
-
-    assert_selector(".container") do
-      assert_selector("img")
     end
   end
 end
