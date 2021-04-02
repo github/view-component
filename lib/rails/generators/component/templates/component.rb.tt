@@ -6,4 +6,10 @@ class <%= class_name %>Component < <%= parent_class %>
     <%= initialize_body %>
   end
 <%- end -%>
+<%- if initialize_call_method_for_inline? -%>  
+  def call
+    content_tag :h1, "Hello world!"
+  end
+<%- end -%>
+
 end
