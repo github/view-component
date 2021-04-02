@@ -16,13 +16,13 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Setup Ruby
-      uses: actions/setup-ruby@v1
+      uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7.x
+        ruby-version: 2.7.2
     - uses: actions/cache@v2
       with:
         path: vendor/bundle
-        key: gems-build-rails-master-ruby-2.7.x-${{ hashFiles('**/Gemfile.lock') }}
+        key: gems-build-rails-main-ruby-2.7.2-${{ hashFiles('**/Gemfile.lock') }}
     - name: Lint with Rubocop
       run: |
         gem install bundler:1.17.3
@@ -34,22 +34,28 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rails_version: [5.0.0, 5.2.3, 6.0.0, 6.1.0, master]
-        ruby_version: [2.4.x, 2.5.x, 2.6.x, 2.7.x]
+        rails_version: [5.0.0, 5.2.3, 6.0.0, 6.1.0, main]
+        ruby_version: [2.4.10, 2.5.8, 2.6.6, 2.7.2, 3.0.0]
         exclude:
+          - rails_version: 5.0.0
+            ruby_version: 3.0.0
+          - rails_version: 5.2.3
+            ruby_version: 3.0.0
           - rails_version: 6.0.0
-            ruby_version: 2.4.x
+            ruby_version: 3.0.0
+          - rails_version: 6.0.0
+            ruby_version: 2.4.10
           - rails_version: 6.1.0
-            ruby_version: 2.4.x
-          - rails_version: master
-            ruby_version: 2.4.x
+            ruby_version: 2.4.10
+          - rails_version: main
+            ruby_version: 2.4.10
     steps:
     - uses: actions/checkout@master
     - name: Setup Ruby
-      uses: actions/setup-ruby@v1
+      uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby_version }}
-    - name: Update rubygems when testing with Ruby 2.4.x
+    - name: Update rubygems when testing with Ruby 2.4.10
       if: startsWith(matrix.ruby_version, '2.4')
       run: |
         gem update --system --no-document
@@ -78,15 +84,15 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Setup Ruby
-      uses: actions/setup-ruby@v1
+      uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7.x
+        ruby-version: 2.7.2
     - name: Download coverage results
       uses: actions/download-artifact@v2
     - uses: actions/cache@v2
       with:
         path: vendor/bundle
-        key: gems-build-rails-master-ruby-2.7.x-${{ hashFiles('**/Gemfile.lock') }}
+        key: gems-build-rails-main-ruby-2.7.2-${{ hashFiles('**/Gemfile.lock') }}
     - name: Collate simplecov
       run: |
         gem install bundler:1.17.3

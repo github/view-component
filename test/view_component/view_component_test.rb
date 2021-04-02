@@ -61,6 +61,33 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_text("bar")
   end
 
+  def test_renders_slim_with_many_slots
+    render_inline(SlimRendersManyComponent.new) do |c|
+      c.slim_component(message: "Bar A") do
+        "Foo A "
+      end
+      c.slim_component(message: "Bar B") do
+        "Foo B "
+      end
+    end
+
+    assert_selector(".slim-div", text: "Foo A Bar A")
+    assert_selector(".slim-div", text: "Foo B Bar B")
+  end
+
+  def test_renders_slim_with_html_formatted_slot
+    render_inline(SlimHTMLFormattedSlotComponent.new)
+
+    assert_selector("p", text: "HTML Formatted")
+  end
+
+  def test_renders_slim_escaping_dangerous_html_assign
+    render_inline(SlimWithUnsafeHTMLComponent.new)
+
+    refute_selector("script")
+    assert_selector(".slim-div", text: "<script>alert('xss')</script>")
+  end
+
   def test_renders_haml_template
     render_inline(HamlComponent.new(message: "bar")) { "foo" }
 
@@ -536,11 +563,66 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_match(/MissingDefaultCollectionParameterComponent initializer must accept `missing_default_collection_parameter` collection parameter/, exception.message)
   end
 
+  def test_component_with_invalid_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidParametersComponent.compile(raise_errors: true)
+      end
+
+      assert_match(/InvalidParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
+  def test_component_with_invalid_named_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidNamedParametersComponent.compile(raise_errors: true)
+      end
+
+      assert_match(/InvalidNamedParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
   def test_collection_component_with_trailing_comma_attr_reader
     exception = assert_raises ArgumentError do
       render_inline(
         ProductReaderOopsComponent.with_collection(["foo"])
       )
+    end
+  end
+
+  def test_render_multiple_templates
+    render_inline(MultipleTemplatesComponent.new(mode: :list))
+
+    assert_selector("li", text: "Apple")
+    assert_selector("li", text: "Banana")
+    assert_selector("li", text: "Pear")
+
+    render_inline(MultipleTemplatesComponent.new(mode: :summary))
+
+    assert_selector("div", text: "Apple, Banana, and Pear")
+  end
+
+  private
+
+  def modify_file(file, content)
+    filename = Rails.root.join(file)
+    old_content = File.read(filename)
+    begin
+      File.open(filename, "wb+") { |f| f.write(content) }
+      yield
+    ensure
+      File.open(filename, "wb+") { |f| f.write(old_content) }
     end
 
     assert_match(/ProductReaderOopsComponent initializer is empty or invalid/, exception.message)
@@ -569,5 +651,36 @@ class ViewComponentTest < ViewComponent::TestCase
 
     assert_predicate InheritedInlineComponent, :compiled?
     assert_selector("input[type='text'][name='name']")
+  end
+
+  def test_does_not_render_if_before_render_raises_abort
+    render_inline(BeforeConditionalRenderComponent.new(should_render: false))
+
+    refute_component_rendered
+  end
+
+  def test_renders_if_before_render_returns_true
+    render_inline(BeforeConditionalRenderComponent.new(should_render: true))
+
+    assert_text("component was rendered")
+  end
+
+  def test_does_not_render_if_symbol_before_render_raises_abort
+    render_inline(BeforeRenderSymbolComponent.new(should_render: false))
+
+    refute_component_rendered
+  end
+
+  def test_renders_if_symbol_before_render_returns_true
+    render_inline(BeforeRenderSymbolComponent.new(should_render: true))
+
+    assert_text("component was rendered")
+  end
+
+  def test_skip_before_render_does_not_call_method
+    component = SkipBeforeRenderComponent.new(should_render: false)
+    render_inline(component)
+
+    assert_text("component was rendered")
   end
 end

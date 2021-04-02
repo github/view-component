@@ -48,7 +48,7 @@ ViewComponents use a standard Ruby initializer that clearly defines what is need
 
 #### Performance
 
-Based on our [benchmarks](../performance/benchmark.rb), ViewComponents are ~10x faster than partials.
+Based on our [benchmarks](https://github.com/github/view_component/blob/main/performance/benchmark.rb), ViewComponents are ~10x faster than partials.
 
 #### Standards
 
@@ -88,6 +88,12 @@ The template engine can also be passed as an option to the generator:
 
 ```bash
 bin/rails generate component Example title content --template-engine slim
+```
+
+To generate a [preview](#previewing-components), pass the `--preview` option:
+
+```bash
+bin/rails generate component Example title content --preview
 ```
 
 #### Implementation
@@ -171,7 +177,7 @@ Returning:
 
 #### Slots (experimental)
 
-_Slots are currently under development as the successor to Content Areas. The Slot APIs should be considered unfinished (it's already in its second iteration, [see the original API](/slots-v1).) and subject to breaking changes in non-major releases of ViewComponent._
+_Slots are currently under development as the successor to Content Areas. The Slot APIs should be considered unfinished (it's already in its second iteration, [see the original API](/slots_v1).) and subject to breaking changes in non-major releases of ViewComponent._
 
 Slots enable multiple blocks of content to be passed to a single ViewComponent, improving the ergonomics of complex components.
 
@@ -210,6 +216,7 @@ class BlogComponent < ViewComponent::Base
     attr_reader :title
 
     def initialize(title:)
+      @title = title
     end
   end
 end
@@ -252,7 +259,7 @@ end
 Lambda slots render their return value. Lambda slots are useful for working with helpers like `content_tag` or as wrappers for another component with specific default values.
 
 ```ruby
-class Blogcomponent < ViewComponent::Base
+class BlogComponent < ViewComponent::Base
   include ViewComponent::SlotableV2
 
   # Renders the returned string
@@ -395,6 +402,8 @@ And render them `with_variant`:
 
 # output: <%= link_to "Phone", phone_path %>
 ```
+
+_**Note**: `call_*` methods must be public._
 
 ### Template Inheritance
 
@@ -1133,6 +1142,15 @@ ViewComponent is far from a novel idea! Popular implementations of view componen
 - [komposable/komponent](https://github.com/komposable/komponent)
 - [activeadmin/arbre](https://github.com/activeadmin/arbre)
 
+## ViewComponent libraries
+
+- [Primer ViewComponents](https://primer.style/view-components/)
+
+## Frameworks using ViewComponent
+
+- [Motion](https://github.com/unabridged/motion)
+- [StimulusReflex](https://docs.stimulusreflex.com/)
+
 ## Resources
 
 - [Encapsulating Views, RailsConf 2020](https://youtu.be/YVYRus_2KZM)
@@ -1200,7 +1218,7 @@ ViewComponent is built by:
 |@johannesengl|@czj|@mrrooijen|@bradparker|@mattbrictson|
 |Berlin, Germany|Paris, France|The Netherlands|Brisbane, Australia|San Francisco|
 
-|<img src="https://avatars.githubusercontent.com/mixergtz?s=256" alt="mixergtz" width="128" />|<img src="https://avatars.githubusercontent.com/jules2689?s=256" alt="jules2689" width="128" />|<img src="https://avatars.githubusercontent.com/g13ydson?s=256" alt="g13ydson" width="128" />|<img src="https://avatars.githubusercontent.com/swanson?s=256" alt="swanson" width="128" />|
-|:---:|:---:|:---:|:---:|
-|@mixergtz|@jules2689|@g13ydson|@swanson|
-|Medellin, Colombia|Toronto, Canada|João Pessoa, Brazil|Indianapolis, IN|
+|<img src="https://avatars.githubusercontent.com/mixergtz?s=256" alt="mixergtz" width="128" />|<img src="https://avatars.githubusercontent.com/jules2689?s=256" alt="jules2689" width="128" />|<img src="https://avatars.githubusercontent.com/g13ydson?s=256" alt="g13ydson" width="128" />|<img src="https://avatars.githubusercontent.com/swanson?s=256" alt="swanson" width="128" />|<img src="https://avatars.githubusercontent.com/bobmaerten?s=256" alt="bobmaerten" width="128" />|
+|:---:|:---:|:---:|:---:|:---:|
+|@mixergtz|@jules2689|@g13ydson|@swanson|@bobmaerten|
+|Medellin, Colombia|Toronto, Canada|João Pessoa, Brazil|Indianapolis, IN|Valenciennes, France|

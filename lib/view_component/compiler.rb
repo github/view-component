@@ -46,7 +46,10 @@ module ViewComponent
         instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
       end
 
-      component_class.validate_collection_parameter! if raise_errors
+      if raise_errors
+        component_class.validate_initialization_parameters!
+        component_class.validate_collection_parameter!
+      end
 
       templates.each do |template|
         # Remove existing compiled template methods,
@@ -163,9 +166,8 @@ module ViewComponent
       # end
       #
       # Without this, `MyOtherComponent` will not look for `my_component/my_other_component.html.erb`
-      nested_component_files = if component_class.name.include?("::")
-        nested_component_path = component_class.name.deconstantize.underscore
-        Dir["#{directory}/#{nested_component_path}/#{component_name}.*{#{extensions}}"]
+      nested_component_files = if component_class.name.include?("::") && component_name != filename
+        Dir["#{directory}/#{filename}/#{component_name}.*{#{extensions}}"]
       else
         []
       end
@@ -205,7 +207,6 @@ module ViewComponent
       end
     end
 
-    # :nocov:
     def compiled_template(file_path)
       handler = ActionView::Template.handler_for_extension(File.extname(file_path).gsub(".", ""))
       template = File.read(file_path)
@@ -216,7 +217,6 @@ module ViewComponent
         handler.call(OpenStruct.new(source: template, identifier: component_class.identifier, type: component_class.type))
       end
     end
-    # :nocov:
 
     def call_method_name(variant)
       if variant.present? && variants.include?(variant)

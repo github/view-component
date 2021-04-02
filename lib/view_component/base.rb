@@ -12,6 +12,7 @@ module ViewComponent
   class Base < ActionView::Base
     include ActiveSupport::Configurable
     include ViewComponent::Previewable
+    include ActiveSupport::Callbacks
 
     ViewContextCalledBeforeRenderError = Class.new(StandardError)
 
@@ -74,7 +75,6 @@ module ViewComponent
       before_render
 
       if render?
-        render_template_for(@variant)
       else
         ""
       end
@@ -181,6 +181,18 @@ module ViewComponent
     class << self
       attr_accessor :source_location, :virtual_path
 
+      def before_render(method_name = nil, &block)
+        if block_given?
+          set_callback :render, :before, block
+        else
+          set_callback :render, :before, method_name
+        end
+      end
+
+      def skip_before_render(method_name)
+        skip_callback :render, method_name
+      end
+
       # Render a component collection.
       def with_collection(collection, **args)
         Collection.new(self, collection, **args)
@@ -222,9 +234,6 @@ module ViewComponent
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
       def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -264,7 +273,7 @@ module ViewComponent
         parameter = validate_default ? collection_parameter : provided_collection_parameter
 
         return unless parameter
-        return if initialize_parameters.map(&:last).include?(parameter)
+        return if initialize_parameter_names.include?(parameter)
 
         # If Ruby cannot parse the component class, then the initalize
         # parameters will be empty and ViewComponent will not be able to render
@@ -281,10 +290,18 @@ module ViewComponent
         )
       end
 
-      private
+      # Ensure the component initializer does not define
+      # invalid parameters that could override the framework's
+      # methods.
+      def validate_initialization_parameters!
+        return unless initialize_parameter_names.include?(RESERVED_PARAMETER)
 
-      def initialize_parameters
-        instance_method(:initialize).parameters
+        raise ArgumentError.new(
+          "#{self} initializer cannot contain " \
+          "`#{RESERVED_PARAMETER}` since it will override a " \
+          "public ViewComponent method."
+        )
+      end
       end
 
       def provided_collection_parameter
