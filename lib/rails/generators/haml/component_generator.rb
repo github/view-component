@@ -9,7 +9,9 @@ module Haml
       class_option :sidecar, type: :boolean, default: false
 
       def copy_view_file
-        template "component.html.haml", destination
+        if !options["inline"]
+          template "component.html.haml", destination
+        end
       end
 
       private
