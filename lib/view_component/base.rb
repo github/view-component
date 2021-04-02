@@ -294,10 +294,6 @@ module ViewComponent
       #
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
-      def ensure_compiled(raise_errors: false)
-        template_compiler.ensure_compiled(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -385,19 +381,10 @@ module ViewComponent
       def collection_counter_parameter
         "#{collection_parameter}_counter".to_sym
       end
-
-      def counter_argument_present?
-        instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
       end
 
       private
 
-      def initialize_parameter_names
-        initialize_parameters.map(&:last)
-      end
-
-      def initialize_parameters
-        instance_method(:initialize).parameters
       end
 
       def provided_collection_parameter
