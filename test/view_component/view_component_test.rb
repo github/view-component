@@ -76,13 +76,13 @@ class ViewComponentTest < ViewComponent::TestCase
   end
 
   def test_renders_slim_with_html_formatted_slot
-    render_inline(SlimHTMLFormattedSlotComponent.new)
+    render_inline(SlimHtmlFormattedSlotComponent.new)
 
     assert_selector("p", text: "HTML Formatted")
   end
 
   def test_renders_slim_escaping_dangerous_html_assign
-    render_inline(SlimWithUnsafeHTMLComponent.new)
+    render_inline(SlimWithUnsafeHtmlComponent.new)
 
     refute_selector("script")
     assert_selector(".slim-div", text: "<script>alert('xss')</script>")
@@ -90,6 +90,13 @@ class ViewComponentTest < ViewComponent::TestCase
 
   def test_renders_haml_template
     render_inline(HamlComponent.new(message: "bar")) { "foo" }
+
+    assert_text("foo")
+    assert_text("bar")
+  end
+
+  def test_render_jbuilder_template
+    render_inline(JbuilderComponent.new(message: "bar")) { "foo" }
 
     assert_text("foo")
     assert_text("bar")
@@ -237,6 +244,16 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_includes exception.message, ":content is a reserved content area name"
   end
 
+  def test_with_content_areas_render_predicate
+    render_inline(ContentAreasPredicateComponent.new) do |c|
+      c.with :title do
+        "hello world"
+      end
+    end
+
+    assert_selector("h1", text: "hello world")
+  end
+
   def test_renders_helper_method_through_proxy
     render_inline(HelpersProxyComponent.new)
 
@@ -244,7 +261,7 @@ class ViewComponentTest < ViewComponent::TestCase
   end
 
   def test_renders_helper_method_within_nested_component
-    render_inline(HelpersContainerComponent.new)
+    render_inline(ContainerComponent.new)
 
     assert_text("Hello helper method")
   end
@@ -392,7 +409,7 @@ class ViewComponentTest < ViewComponent::TestCase
       render_inline(ValidationsComponent.new)
     end
 
-    assert_equal exception.message, "Validation failed: Content can't be blank"
+    assert_equal "Validation failed: Content can't be blank", exception.message
   end
 
   # TODO: Remove in v3.0.0
@@ -401,7 +418,7 @@ class ViewComponentTest < ViewComponent::TestCase
       render_inline(OldValidationsComponent.new)
     end
 
-    assert_equal exception.message, "Validation failed: Content can't be blank"
+    assert_equal "Validation failed: Content can't be blank", exception.message
   end
 
   def test_compiles_unrendered_component
@@ -466,6 +483,14 @@ class ViewComponentTest < ViewComponent::TestCase
     end
 
     assert_includes error.message, "More than one template found for TemplateAndSidecarDirectoryTemplateComponent."
+  end
+
+  def test_with_custom_test_controller
+    with_controller_class CustomTestControllerController do
+      render_inline(CustomTestControllerComponent.new)
+
+      assert_text("foo")
+    end
   end
 
   def test_backtrace_returns_correct_file_and_line_number
@@ -569,7 +594,7 @@ class ViewComponentTest < ViewComponent::TestCase
       ViewComponent::CompileCache.cache = Set.new
 
       exception = assert_raises ArgumentError do
-        InvalidParametersComponent.compile(raise_errors: true)
+        InvalidParametersComponent.ensure_compiled(raise_errors: true)
       end
 
       assert_match(/InvalidParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
@@ -584,7 +609,7 @@ class ViewComponentTest < ViewComponent::TestCase
       ViewComponent::CompileCache.cache = Set.new
 
       exception = assert_raises ArgumentError do
-        InvalidNamedParametersComponent.compile(raise_errors: true)
+        InvalidNamedParametersComponent.ensure_compiled(raise_errors: true)
       end
 
       assert_match(/InvalidNamedParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
@@ -622,17 +647,10 @@ class ViewComponentTest < ViewComponent::TestCase
   end
 
   def test_inherited_inline_component_inherits_inline_method
-    render_inline(InheritedInlineComponent.new)
+    render_inline(InlineInheritedComponent.new)
 
-    assert_predicate InheritedInlineComponent, :compiled?
+    assert_predicate InlineInheritedComponent, :compiled?
     assert_selector("input[type='text'][name='name']")
   end
-
-  def test_after_compile
-    assert_equal AfterCompileComponent.compiled_value, "Hello, World!"
-
-    render_inline(AfterCompileComponent.new)
-
-    assert_text "Hello, World!"
   end
 end

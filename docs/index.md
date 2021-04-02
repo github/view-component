@@ -28,7 +28,7 @@ ViewComponents are Ruby objects that output HTML. Think of them as an evolution 
 
 ### When should I use components?
 
-Components are most effective in cases where view code is reused or benefits from being tested directly.
+Components are most effective in cases where view code is reused or benefits from being tested directly. Heavily reused partials and templates with significant amounts of embedded Ruby often make good ViewComponents.
 
 ### Why should I use components?
 
@@ -75,7 +75,7 @@ Use the component generator to create a new ViewComponent.
 The generator accepts a component name and a list of arguments:
 
 ```bash
-bin/rails generate component Example title 
+bin/rails generate component Example title
 
       invoke  test_unit
       create  test/components/example_component_test.rb
@@ -131,64 +131,21 @@ Returning:
 <span title="my title">Hello, World!</span>
 ```
 
-#### Content Areas
+#### Passing content to ViewComponents
 
 Content passed to a ViewComponent as a block is captured and assigned to the `content` accessor.
 
-ViewComponents can declare additional content areas. For example:
+ViewComponents also accept content through Slots, enabling multiple blocks of content to be passed to a single ViewComponent.
 
-`app/components/modal_component.rb`:
-
-```ruby
-class ModalComponent < ViewComponent::Base
-  with_content_areas :header, :body
-end
-```
-
-`app/components/modal_component.html.erb`:
-
-```erb
-<div class="modal">
-  <div class="header"><%= header %></div>
-  <div class="body"><%= body %></div>
-</div>
-```
-
-Rendered in a view as:
-
-```erb
-<%= render(ModalComponent.new) do |component| %>
-  <% component.with(:header) do %>
-    Hello Jane
-  <% end %>
-  <% component.with(:body) do %>
-    <p>Have a great day.</p>
-  <% end %>
-<% end %>
-```
-
-Returning:
-
-```html
-<div class="modal">
-  <div class="header">Hello Jane</div>
-  <div class="body"><p>Have a great day.</p></div>
-</div>
-```
-
-#### Slots (experimental)
-
-_Slots are currently under development as the successor to Content Areas. The Slot APIs should be considered unfinished (it's already in its second iteration, [see the original API](/slots_v1).) and subject to breaking changes in non-major releases of ViewComponent._
-
-Slots enable multiple blocks of content to be passed to a single ViewComponent, improving the ergonomics of complex components.
-
-Slots are defined with with `renders_one` and `renders_many`:
+Slots are defined with `renders_one` and `renders_many`:
 
 `renders_one` defines a slot that will be rendered at most once per component: `renders_one :header`
 
 `renders_many` defines a slot that can be rendered multiple times per-component: `renders_many :blog_posts`
 
-#### Defining slots
+_To view documentation for content_areas (soon to be deprecated) and the original implementation of Slots, see [/content_areas](/content_areas) and [/slots_v1](/slots_v1)._
+
+##### Defining slots
 
 Slots come in three forms:
 
@@ -204,8 +161,6 @@ Delegate slots delegate to another component:
 
 ```ruby
 class BlogComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   # Since `HeaderComponent` is nested inside of this component, we have to
   # reference it as a string instead of a class name.
   renders_one :header, "HeaderComponent"
@@ -219,7 +174,7 @@ class BlogComponent < ViewComponent::Base
     def initialize(classes:)
       @classes = classes
     end
-    
+
     def call
       content_tag :h1, content, { class: classes }
     end
@@ -265,8 +220,6 @@ Lambda slots render their return value. Lambda slots are useful for working with
 
 ```ruby
 class BlogComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   # Renders the returned string
   renders_one :header, -> (classes:) do
     content_tag :h1 do
@@ -290,8 +243,6 @@ Define a pass through slot by omitting the second argument to `renders_one` and 
 ```ruby
 # blog_component.rb
 class BlogComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   renders_one :header
   renders_many :posts
 end
@@ -333,8 +284,6 @@ e.g.
 
 ```ruby
 class NavigationComponent < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   renders_many :links, "LinkComponent"
 
   class LinkComponent < ViewComponent::Base
@@ -459,14 +408,13 @@ app/components
 
 #### Sidecar directory
 
-As an alternative, views and other assets can be placed in a sidecar directory with the same name as the component, which can be useful for organizing views alongside other assets like Javascript and CSS.
+As an alternative, views and other assets can be placed in a sidecar directory with the same name as the component, which can be useful for organizing views alongside other assets like Javascript.
 
 ```console
 app/components
 ├── ...
 ├── example_component.rb
 ├── example_component
-|   ├── example_component.css
 |   ├── example_component.html.erb
 |   └── example_component.js
 ├── ...
@@ -713,6 +661,18 @@ class UserComponent < ViewComponent::Base
 end
 ```
 
+#### Using nested URL helpers
+
+Rails nested URL helpers implicitly depend on the current `request` in certain cases. Since ViewComponent is built to enable reusing components in different contexts, nested URL helpers should be passed their options explicitly:
+
+```ruby
+# bad
+edit_user_path # implicitly depends on current request to provide `user`
+
+# good
+edit_user_path(user: current_user)
+```
+
 ### Writing tests
 
 Unit test components directly, using the `render_inline` test helper, asserting against the rendered output.
@@ -786,7 +746,11 @@ end
 
 ### Previewing Components
 
-`ViewComponent::Preview`, like `ActionMailer::Preview`, provides a way to preview components in isolation:
+`ViewComponent::Preview`, like `ActionMailer::Preview`, provides a quick way to preview components in isolation.
+
+_For a more interactive experience, consider using [ViewComponent::Storybook](https://github.com/jonspalmer/view_component_storybook)._
+
+`ViewComponent::Preview`s are defined as:
 
 `test/components/previews/example_component_preview.rb`
 
@@ -936,14 +900,34 @@ Previews can be extended to allow users to add authentication, authorization, be
 config.view_component.preview_controller = "MyPreviewController"
 ```
 
-#### Configuring TestController
+### Configuring the controller used in tests
 
-Component tests assume the existence of an `ApplicationController` class, which be can be configured using the `test_controller` option:
-
-`config/application.rb`
+Component tests assume the existence of an `ApplicationController` class, which can be configured globally using the `test_controller` option:
 
 ```ruby
 config.view_component.test_controller = "BaseController"
+```
+
+To configure the controller used for a test case, use `with_controller_class` from `ViewComponent::TestHelpers`.
+
+```ruby
+class ExampleComponentTest < ViewComponent::TestCase
+  def test_component_in_public_controller
+    with_controller_class PublicController do
+      render_inline ExampleComponent.new
+
+      assert_text "foo"
+    end
+  end
+
+  def test_component_in_authenticated_controller
+    with_controller_class AuthenticatedController do
+      render_inline ExampleComponent.new
+
+      assert_text "bar"
+    end
+  end
+end
 ```
 
 ### Setting up RSpec
@@ -982,11 +966,64 @@ With the monkey patch disabled, use `render_component` (or  `render_component_to
 <%= render_component Component.new(message: "bar") %>
 ```
 
-### Sidecar assets (experimental)
+### Sidecar CSS (experimental)
 
-It’s possible to include Javascript and CSS alongside components, sometimes called "sidecar" assets or files.
+_Note: This feature is experimental. Breaking changes should be expected without warning._
 
-To use the Webpacker gem to compile sidecar assets located in `app/components`:
+ViewComponent includes experimental support for encapsulated sidecar CSS, locally scoping CSS selectors using CSS Modules.
+
+To use the experimental feature, include `ViewComponent::Styleable`:
+
+`app/components/styleable_component.rb`:
+
+```ruby
+class StyleableComponent < ViewComponent::Base
+  include ViewComponent::Styleable
+end
+```
+
+Add a sidecar stylesheet for the component:
+
+`app/components/styleable_component.css`:
+
+```css
+.foo {
+  color: red;
+}
+```
+
+Use `styles` to retrieve the scoped selector:
+
+`app/components/styleable_component.rb`:
+
+```ruby
+class StyleableComponent < ViewComponent::Base
+  include ViewComponent::Styleable
+
+  def call
+    content_tag(:div, "Hello, World!", class: styles['foo'])
+  end
+end
+```
+
+Render the component in a view:
+
+```erb
+<%= render(StyleableComponent.new) %>
+```
+
+Returning:
+
+```html
+<div class="Css_0343d_foo">Hello, World!</div>
+<style>.Css_0343d_foo { color: red; }</style>
+```
+
+### Sidecar javascript (experimental)
+
+It’s possible to include Javascript alongside components.
+
+To use the Webpacker gem to compile javascript located in `app/components`:
 
 1. In `config/webpacker.yml`, add `"app/components"` to the `resolved_paths` array (e.g. `resolved_paths: ["app/components"]`).
 2. In the Webpack entry file (often `app/javascript/packs/application.js`), add an import statement to a helper file, and in the helper file, import the components' Javascript:
@@ -1002,102 +1039,12 @@ function importAll(r) {
   r.keys().forEach(r)
 }
 
-importAll(require.context("../components", true, /_component\.js$/))
+importAll(require.context("../components", true, /[_\/]component\.js$/))
 ```
 
-Any file with the `_component.js` suffix (such as `app/components/widget_component.js`) will be compiled into the Webpack bundle. If that file itself imports another file, for example `app/components/widget_component.css`, it will also be compiled and bundled into Webpack's output stylesheet if Webpack is being used for styles.
+Any file with the `_component.js` suffix (such as `app/components/widget_component.js`) will be compiled into the Webpack bundle.
 
-#### Encapsulating sidecar assets
-
-Ideally, sidecar Javascript/CSS should not "leak" out of the context of its associated component.
-
-One approach is to use Web Components, which contain all Javascript functionality, internal markup, and styles within the shadow root of the Web Component.
-
-For example:
-
-`app/components/comment_component.rb`
-
-```ruby
-class CommentComponent < ViewComponent::Base
-  def initialize(comment:)
-    @comment = comment
-  end
-
-  def commenter
-    @comment.user
-  end
-
-  def commenter_name
-    commenter.name
-  end
-
-  def avatar
-    commenter.avatar_image_url
-  end
-
-  def formatted_body
-    simple_format(@comment.body)
-  end
-
-  private
-
-  attr_reader :comment
-end
-```
-
-`app/components/comment_component.html.erb`
-
-```erb
-<my-comment comment-id="<%= comment.id %>">
-  <time slot="posted" datetime="<%= comment.created_at.iso8601 %>"><%= comment.created_at.strftime("%b %-d") %></time>
-
-  <div slot="avatar"><img src="<%= avatar %>" /></div>
-
-  <div slot="author"><%= commenter_name %></div>
-
-  <div slot="body"><%= formatted_body %></div>
-</my-comment>
-```
-
-`app/components/comment_component.js`
-
-```js
-class Comment extends HTMLElement {
-  styles() {
-    return `
-      :host {
-        display: block;
-      }
-      ::slotted(time) {
-        float: right;
-        font-size: 0.75em;
-      }
-      .commenter { font-weight: bold; }
-      .body { … }
-    `
-  }
-
-  constructor() {
-    super()
-    const shadow = this.attachShadow({mode: 'open'});
-    shadow.innerHTML = `
-      <style>
-        ${this.styles()}
-      </style>
-      <slot name="posted"></slot>
-      <div class="commenter">
-        <slot name="avatar"></slot> <slot name="author"></slot>
-      </div>
-      <div class="body">
-        <slot name="body"></slot>
-      </div>
-    `
-  }
-}
-customElements.define('my-comment', Comment)
-```
-
-##### Stimulus
+#### Stimulus
 
 In Stimulus, create a 1:1 mapping between a Stimulus controller and a component. In order to load in Stimulus controllers from the `app/components` tree, amend the Stimulus boot code in `app/javascript/packs/application.js`:
 
@@ -1145,7 +1092,7 @@ app/components
 
 ## Known issues
 
-### form_for compatiblilty
+### form_for compatibility
 
 ViewComponent is [not currently compatible](https://github.com/github/view_component/issues/241) with `form_for` helpers.
 
@@ -1190,6 +1137,7 @@ ViewComponent is far from a novel idea! Popular implementations of view componen
 - [Rails to Introduce View Components, Dev.to](https://dev.to/andy/rails-to-introduce-view-components-3ome)
 - [ActionView::Components in Rails 6.1, Drifting Ruby](https://www.driftingruby.com/episodes/actionview-components-in-rails-6-1)
 - [Demo repository, view-component-demo](https://github.com/joelhawksley/view-component-demo)
+- [Introducing ViewComponent - The Next Level In Rails Views](https://teamhq.app/blog/tech/15-introducing-viewcomponent-the-next-level-in-rails-views)
 
 ## Contributing
 
@@ -1248,3 +1196,8 @@ ViewComponent is built by:
 |:---:|:---:|:---:|:---:|:---:|
 |@mixergtz|@jules2689|@g13ydson|@swanson|@bobmaerten|
 |Medellin, Colombia|Toronto, Canada|João Pessoa, Brazil|Indianapolis, IN|Valenciennes, France|
+
+|<img src="https://avatars.githubusercontent.com/nshki?s=256" alt="nshki" width="128" />|<img src="https://avatars.githubusercontent.com/nielsslot?s=256" alt="nshki" width="128" />|
+|:---:|:---:|
+|@nshki|@nielsslot|
+|Los Angeles, CA|Amsterdam|
