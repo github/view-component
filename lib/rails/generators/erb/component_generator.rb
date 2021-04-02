@@ -10,18 +10,18 @@ module Erb
       class_option :inline, type: :boolean, default: false
 
       def copy_view_file
-        template "component.html.erb", destination
+        unless options["inline"]
+          template "component.html.erb", destination
+        end
       end
 
       private
 
       def destination
-        if !options["inline"]
-          if options["sidecar"]
-            File.join("app/components", class_path, "#{file_name}_component", "#{file_name}_component.html.erb")
-          else
-            File.join("app/components", class_path, "#{file_name}_component.html.erb")
-          end
+        if options["sidecar"]
+          File.join("app/components", class_path, "#{file_name}_component", "#{file_name}_component.html.erb")
+        else
+          File.join("app/components", class_path, "#{file_name}_component.html.erb")
         end
       end
 
