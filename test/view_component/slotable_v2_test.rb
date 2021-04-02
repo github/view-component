@@ -141,6 +141,18 @@ class SlotsV2sTest < ViewComponent::TestCase
     assert_selector(".item-content", text: "My rad item")
   end
 
+  def test_sub_component_template_rendering
+    render_inline(Nested::SlotsV2Component.new) do |component|
+      component.item do |sub_component|
+        sub_component.thing do
+          "My rad thing"
+        end
+      end
+    end
+
+    assert_selector(".thing", text: "My rad thing")
+  end
+
   def test_slot_with_component_delegate
     render_inline SlotsV2DelegateComponent.new do |component|
       component.item do

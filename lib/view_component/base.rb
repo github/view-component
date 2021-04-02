@@ -15,6 +15,8 @@ module ViewComponent
 
     ViewContextCalledBeforeRenderError = Class.new(StandardError)
 
+    RESERVED_PARAMETER = :content
+
     # For CSRF authenticity tokens in forms
     delegate :form_authenticity_token, :protect_against_forgery?, :config, to: :helpers
 
@@ -264,7 +266,7 @@ module ViewComponent
         parameter = validate_default ? collection_parameter : provided_collection_parameter
 
         return unless parameter
-        return if initialize_parameters.map(&:last).include?(parameter)
+        return if initialize_parameter_names.include?(parameter)
 
         # If Ruby cannot parse the component class, then the initalize
         # parameters will be empty and ViewComponent will not be able to render
@@ -281,7 +283,24 @@ module ViewComponent
         )
       end
 
+      # Ensure the component initializer does not define
+      # invalid parameters that could override the framework's
+      # methods.
+      def validate_initialization_parameters!
+        return unless initialize_parameter_names.include?(RESERVED_PARAMETER)
+
+        raise ArgumentError.new(
+          "#{self} initializer cannot contain " \
+          "`#{RESERVED_PARAMETER}` since it will override a " \
+          "public ViewComponent method."
+        )
+      end
+
       private
+
+      def initialize_parameter_names
+        initialize_parameters.map(&:last)
+      end
 
       def initialize_parameters
         instance_method(:initialize).parameters

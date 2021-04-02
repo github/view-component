@@ -7,6 +7,7 @@ module Erb
     class ComponentGenerator < Base
       source_root File.expand_path("templates", __dir__)
       class_option :sidecar, type: :boolean, default: false
+      class_option :inline, type: :boolean, default: false
 
       def copy_view_file
         template "component.html.erb", destination
@@ -15,10 +16,12 @@ module Erb
       private
 
       def destination
-        if options["sidecar"]
-          File.join("app/components", class_path, "#{file_name}_component", "#{file_name}_component.html.erb")
-        else
-          File.join("app/components", class_path, "#{file_name}_component.html.erb")
+        if !options["inline"]
+          if options["sidecar"]
+            File.join("app/components", class_path, "#{file_name}_component", "#{file_name}_component.html.erb")
+          else
+            File.join("app/components", class_path, "#{file_name}_component.html.erb")
+          end
         end
       end
 
