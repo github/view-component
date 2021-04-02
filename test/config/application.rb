@@ -10,6 +10,7 @@ require "sprockets/railtie"
 
 require "haml"
 require "slim"
+require "jbuilder"
 
 module Dummy
   class Application < Rails::Application

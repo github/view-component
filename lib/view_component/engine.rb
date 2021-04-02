@@ -22,7 +22,7 @@ module ViewComponent
         )
 
         if options.preview_path.present?
-          ActiveSupport::Deprecation.warn(
+          ViewComponent::Deprecation.warn(
             "`preview_path` will be removed in v3.0.0. Use `preview_paths` instead."
           )
           options.preview_paths << options.preview_path
@@ -90,7 +90,7 @@ module ViewComponent
       options = app.config.view_component
 
       if options.show_previews
-        app.routes.append do
+        app.routes.prepend do
           preview_controller = options.preview_controller.sub(/Controller$/, "").underscore
 
           get options.preview_route, to: "#{preview_controller}#index", as: :preview_view_components, internal: true

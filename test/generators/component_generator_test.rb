@@ -32,11 +32,34 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
   end
 
   def test_component_preview
-    run_generator %w[user --preview]
+    with_preview_paths([]) do
+      run_generator %w[user --preview]
 
-    assert_file "test/components/previews/user_component_preview.rb" do |component|
-      assert_match(/class UserComponentPreview < /, component)
-      assert_match(/render\(UserComponent.new\)/, component)
+      assert_file "test/components/previews/user_component_preview.rb" do |component|
+        assert_match(/class UserComponentPreview < /, component)
+        assert_match(/render\(UserComponent.new\)/, component)
+      end
+    end
+  end
+
+  def test_component_preview_with_one_overridden_preview_path
+    with_preview_paths(%w[spec/components/previews]) do
+      run_generator %w[user --preview]
+
+      assert_file "spec/components/previews/user_component_preview.rb" do |component|
+        assert_match(/class UserComponentPreview < /, component)
+        assert_match(/render\(UserComponent.new\)/, component)
+      end
+    end
+  end
+
+  def test_component_preview_with_two_overridden_preview_paths
+    with_preview_paths(%w[spec/components/previews some/other/directory]) do
+      run_generator %w[user --preview]
+
+      assert_no_file "test/components/previews/user_component_preview.rb"
+      assert_no_file "spec/components/previews/user_component_preview.rb"
+      assert_no_file "some/other/directory/user_component_preview.rb"
     end
   end
 
@@ -76,11 +99,13 @@ class ComponentGeneratorTest < Rails::Generators::TestCase
   end
 
   def test_component_preview_with_namespace
-    run_generator %w[admins/user --preview]
+    with_preview_paths([]) do
+      run_generator %w[admins/user --preview]
 
-    assert_file "test/components/previews/admins/user_component_preview.rb" do |component|
-      assert_match(/class Admins::UserComponentPreview < /, component)
-      assert_match(/render\(Admins::UserComponent.new\)/, component)
+      assert_file "test/components/previews/admins/user_component_preview.rb" do |component|
+        assert_match(/class Admins::UserComponentPreview < /, component)
+        assert_match(/render\(Admins::UserComponent.new\)/, component)
+      end
     end
   end
 
