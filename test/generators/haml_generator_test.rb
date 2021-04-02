@@ -13,7 +13,7 @@ class HamlGeneratorTest < Rails::Generators::TestCase
 
   arguments %w[user]
 
-  def test_component
+  def test_component_generator
     run_generator
 
     assert_file "app/components/user_component.html.haml" do |view|
@@ -21,7 +21,7 @@ class HamlGeneratorTest < Rails::Generators::TestCase
     end
   end
 
-  def test_component_with_sidecar
+  def test_component_generator_with_sidecar
     run_generator %w[user --sidecar]
 
     assert_file "app/components/user_component/user_component.html.haml" do |view|
@@ -39,5 +39,11 @@ class HamlGeneratorTest < Rails::Generators::TestCase
     run_generator %w[admins/user --sidecar]
 
     assert_file "app/components/admins/user_component/user_component.html.haml"
+  end
+
+  def test_component_with_inline
+    run_generator %w[user name --inline]
+
+    assert_no_file "app/components/user_component.html.haml"
   end
 end
