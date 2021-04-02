@@ -6,6 +6,7 @@ require_relative File.expand_path("../../../lib/rails/generators/test_unit/compo
 class ViewComponent::TestUnitGeneratorTest < ::Rails::Generators::TestCase
   tests TestUnit::Generators::ComponentGenerator
   destination File.expand_path("../tmp", File.dirname(__FILE__))
+  setup :prepare_destination
 
   setup do
     run_generator %w(Dummy data)
