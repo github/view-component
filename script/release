@@ -1,6 +1,152 @@
 #!/usr/bin/env bash
-set -euo pipefail
-IFS=$'\n\t'
-set -vx
 
-bundle exec rake release
+fetch() {
+  git fetch --all
+}
+
+branch_name() {
+  git symbolic-ref --short HEAD
+}
+
+local_history_is_clean() {
+  history=$(git rev-list --count --right-only @{u}...HEAD)
+  [ "$history" == "0" ]
+}
+
+remote_history_is_clean() {
+  history=$(git rev-list --count --left-only @{u}...HEAD)
+  [ "$history" == "0" ]
+}
+
+tag_exists_on_remote() {
+  git rev-parse --quiet --verify refs/tags/v$1.$2.$3 > /dev/null
+}
+
+working_tree_is_clean() {
+  status=$(git status --porcelain)
+  [ "$status" == "" ]
+}
+
+create_release_branch() {
+  git switch -c release-v$1-$2-$3
+}
+
+update_readme() {
+  sed -i '' "/## main/ {a\
+  \\
+\\
+## $1.$2.$3
+  }" CHANGELOG.md
+}
+
+update_ruby_version() {
+  # Update version file
+  sed -E -i '' \
+      -e "s/MAJOR = [0-9]+/MAJOR = $1/g" \
+      -e "s/MINOR = [0-9]+/MINOR = $2/g" \
+      -e "s/PATCH = [0-9]+/PATCH = $3/g" \
+      lib/view_component/version.rb
+}
+
+update_gemfiles() {
+  # Update Gemfile.lock
+  bundle
+}
+
+add_changed_files() {
+  git add \
+    CHANGELOG.md \
+    Gemfile.lock \
+    lib/view_component/version.rb
+}
+
+commit() {
+  git commit -m "release $1.$2.$3"
+}
+
+push() {
+  git push origin release-v$1-$2-$3
+
+  echo "####################################################"
+  echo "Now, open a PR with this branch and merge it to main"
+  echo "Then, run script/publish on main to release the gem"
+  echo "Finally, create a GitHub release https://github.com/github/view_component/releases/new with the changes from CHANGELOG"
+  echo "####################################################"
+}
+
+main() {
+  version=$(ruby ./lib/view_component/version.rb)
+  version=(${version//./ })
+  major=${version[0]}
+  minor=${version[1]}
+  patch=${version[2]}
+
+  echo "==================="
+  echo "Prerequisite Checks"
+  echo "==================="
+
+  if ! working_tree_is_clean; then
+    echo "Error: unclean working tree"
+    exit 1
+  fi
+
+  if [ "$(branch_name)" != "main" ]; then
+    echo "Error: can only make a release on the main branch"
+    exit 1
+  fi
+
+  fetch
+
+  if ! remote_history_is_clean; then
+    echo "Error: changes exist on origin not pulled into this branch. Please pull"
+    exit 1
+  fi
+
+  if ! local_history_is_clean; then
+    echo "Error: changes exist that haven't been pushed to origin. Please pull"
+    exit 1
+  fi
+
+  echo "Type the number of an option to bump, or pick Manual to enter a version number"
+  select bump in Major Minor Patch Manual
+  do
+    if [ "$bump" == "Major" ]; then
+      major=$((major + 1))
+    elif [ "$bump" == "Minor" ]; then
+      minor=$((minor + 1))
+    elif [ "$bump" == "Patch" ]; then
+      patch=$((patch + 1))
+    else
+      read -p "What version? (Currently $major.$minor.$patch): " new_version
+      if [ "$new_version" == "$major.$minor.$patch" ]; then
+        echo "Error: Cannot be the same version"
+        exit 1
+      fi
+
+      new_version=(${new_version//./ })
+
+      major=${new_version[0]}
+      minor=${new_version[1]}
+      patch=${new_version[2]}
+    fi
+
+    if tag_exists_on_remote $major $minor $patch; then
+      echo "Error: tag exists on remote"
+      exit 1
+    fi
+
+    echo "==============================="
+    echo "Creating release for $major.$minor.$patch"
+    echo "==============================="
+
+    create_release_branch $major $minor $patch
+    update_readme $major $minor $patch
+    update_ruby_version $major $minor $patch
+    update_gemfiles $major $minor $patch
+    add_changed_files $major $minor $patch
+    commit $major $minor $patch
+    push $major $minor $patch
+  done
+}
+
+main
