@@ -28,7 +28,11 @@ module ViewComponent
       @content = view_context.capture do
         if defined?(@_component_instance)
           # render_in is faster than `parent.render`
-          @_component_instance.render_in(view_context, &@_content_block)
+          if defined?(@_content_block)
+            @_component_instance.render_in(view_context, &@_content_block)
+          else
+            @_component_instance.render_in(view_context)
+          end
         elsif defined?(@_content)
           @_content
         elsif defined?(@_content_block)

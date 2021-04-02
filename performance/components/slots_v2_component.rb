@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class SlotsV2Component < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   renders_one :header, -> (**kwargs) { HeaderComponent.new(**kwargs) }
   renders_many :items, -> (**kwargs) { ItemComponent.new(**kwargs) }
 
