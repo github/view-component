@@ -2,9 +2,81 @@
 
 ## main
 
+* Experimental: add `ViewComponent::Styleable` for encapsulated CSS.
+
+    *Joel Hawksley*
+
+* Experimental: call `._sidecar_files` to fetch the sidecar files for a given list of extensions, e.g. passing `["yml", "yaml"]`.
+
+    *Elia Schito*
+
+* Fix bug where a single `jbuilder` template matched multiple template handlers.
+
+    *Niels Slot*
+
+## 2.28.0
+
+* Include SlotableV2 by default in Base. **Note:** It's no longer necessary to include `ViewComponent::SlotableV2` to use Slots.
+
+    *Joel Hawksley*
+
+* Prepend Preview routes instead of appending, accounting for cases where host application has catchall route.
+
+    *Joel Hawksley*
+
+* Fix bug where blocks passed to lambda slots will render incorrectly in certain situations.
+
+    *Blake Williams*
+
+## 2.27.0
+
+* Allow customization of the controller used in component tests.
+
+    *Alex Robbin*
+
+* Generate preview at overridden path if one exists when using `--preview` flag.
+
+    *Nishiki Liu*
+
+## 2.26.1
+
+* Fix bug that raises when trying to use a collection before the component has been compiled.
+
+    *Blake Williams*
+
+## 2.26.0
+
+* Lazily evaluate component `content` in `render?`, preventing the `content` block from being evaluated when `render?` returns false.
+
+    *Blake Williams*
+
+* Do not generate template when using `--inline` flag.
+
+    *Hans Lemuet*
+
+* Add `--inline` option to the Haml and Slim generators
+
+    *Hans Lemuet*
+
+## 2.25.1
+
+* Experimental: call `._after_compile` class method after a component is compiled.
+
+    *Joel Hawksley*
+
+* Fix bug where SlotV2 was rendered as an HTML string when using Slim.
+
+    *Manuel Puyol*
+
+## 2.25.0
+
 * Add `--preview` generator option to create an associated preview file.
 
-  *Bob Maerten*
+    *Bob Maerten*
+
+* Add argument validation to avoid `content` override.
+
+    *Manuel Puyol*
 
 ## 2.24.0
 

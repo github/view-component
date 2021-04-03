@@ -44,7 +44,7 @@ module ViewComponent
 
     initializer "view_component.eager_load_actions" do
       ActiveSupport.on_load(:after_initialize) do
-        ViewComponent::Base.descendants.each(&:compile) if Rails.application.config.eager_load
+        ViewComponent::Base.descendants.each(&:ensure_compiled) if Rails.application.config.eager_load
       end
     end
 
@@ -90,7 +90,7 @@ module ViewComponent
       options = app.config.view_component
 
       if options.show_previews
-        app.routes.append do
+        app.routes.prepend do
           preview_controller = options.preview_controller.sub(/Controller$/, "").underscore
 
           get options.preview_route, to: "#{preview_controller}#index", as: :preview_view_components, internal: true
