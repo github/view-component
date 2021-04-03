@@ -1,0 +1,32 @@
+<div class="card <%= @classes %>">
+  <div class="title">
+    <%= title %>
+  </div>
+  <div class="subtitle">
+    <%= subtitle %>
+  </div>
+  <div class="nav">
+    <% if tabs.any? %>
+      <% tabs.each do |tab| %>
+        <div class="tab">
+          <%= tab %>
+        </div>
+      <% end %>
+    <% else %>
+      No tabs provided
+    <% end %>
+  </div>
+  <div class="body">
+    <% if items.any? %>
+      <% items.each do |item| %>
+        <div class="item <%= item.classes %>">
+          <%= item %>
+        </div>
+      <% end %>
+    <% else %>
+      No items provided
+    <% end %>
+  </div>
+
+  <%= footer %>
+</div>
