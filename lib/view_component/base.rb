@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-
 require "action_view"
 require "active_support/configurable"
 require "view_component/collection"
@@ -7,7 +6,6 @@ require "view_component/compile_cache"
 require "view_component/previewable"
 require "view_component/slotable"
 require "view_component/slotable_v2"
-
 module ViewComponent
   class Base < ActionView::Base
     include ActiveSupport::Configurable
@@ -15,12 +13,13 @@ module ViewComponent
 
     ViewContextCalledBeforeRenderError = Class.new(StandardError)
 
+    RESERVED_PARAMETER = :content
+
     # For CSRF authenticity tokens in forms
     delegate :form_authenticity_token, :protect_against_forgery?, :config, to: :helpers
 
     class_attribute :content_areas
     self.content_areas = [] # class_attribute:default doesn't work until Rails 5.2
-
     # Entrypoint for rendering components.
     #
     # view_context: ActionView context from calling view
@@ -222,9 +221,6 @@ module ViewComponent
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
       def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -264,7 +260,7 @@ module ViewComponent
         parameter = validate_default ? collection_parameter : provided_collection_parameter
 
         return unless parameter
-        return if initialize_parameters.map(&:last).include?(parameter)
+        return if initialize_parameter_names.include?(parameter)
 
         # If Ruby cannot parse the component class, then the initalize
         # parameters will be empty and ViewComponent will not be able to render
@@ -281,10 +277,18 @@ module ViewComponent
         )
       end
 
-      private
+      # Ensure the component initializer does not define
+      # invalid parameters that could override the framework's
+      # methods.
+      def validate_initialization_parameters!
+        return unless initialize_parameter_names.include?(RESERVED_PARAMETER)
 
-      def initialize_parameters
-        instance_method(:initialize).parameters
+        raise ArgumentError.new(
+          "#{self} initializer cannot contain " \
+          "`#{RESERVED_PARAMETER}` since it will override a " \
+          "public ViewComponent method."
+        )
+      end
       end
 
       def provided_collection_parameter
