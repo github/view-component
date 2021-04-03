@@ -223,9 +223,6 @@ module ViewComponent
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
       def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -291,7 +288,6 @@ module ViewComponent
       def provided_collection_parameter
         @provided_collection_parameter ||= nil
       end
-
     end
 
     ActiveSupport.run_load_hooks(:view_component, self)
