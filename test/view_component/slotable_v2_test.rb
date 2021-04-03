@@ -196,7 +196,7 @@ class SlotsV2sTest < ViewComponent::TestCase
   end
 
   def test_renders_nested_content_in_order
-    render_inline TitleWrapperComponent.new(content: "Hello world!")
+    render_inline TitleWrapperComponent.new(title: "Hello world!")
 
     assert_selector("h1", text: /Hello world/)
     assert_text(/Hello world/, count: 1)
@@ -207,9 +207,68 @@ class SlotsV2sTest < ViewComponent::TestCase
   # was accidentally assigned to all components!
   def test_sub_components_pollution
     new_component_class = Class.new(ViewComponent::Base)
-    new_component_class.include(ViewComponent::SlotableV2)
     # this returned:
     # [SlotsV2Component::Subtitle, SlotsV2Component::Tab...]
     assert_empty new_component_class.registered_slots
+  end
+
+  def test_renders_slots_with_before_render_hook
+    render_inline(SlotsV2BeforeRenderComponent.new) do |component|
+      component.title do
+        "This is my title!"
+      end
+
+      component.greeting do
+        "John Doe"
+      end
+      component.greeting do
+        "Jane Doe"
+      end
+    end
+
+    assert_selector("h1", text: "Testing - This is my title!")
+    assert_selector(".greeting", text: "Hello, John Doe")
+    assert_selector(".greeting", text: "Hello, Jane Doe")
+  end
+    end
+  end
+
+  def test_slot_with_nested_blocks_content_selectable_true
+    render_inline(NestedSharedState::TableComponent.new(selectable: true)) do |table_card|
+      table_card.header("regular_argument", class_names: "table__header extracted_kwarg", data: { splatted_kwarg: "splatted_keyword_argument"}) do |header|
+        header.cell { "Cell1" }
+        header.cell(class_names: "-has-sort") { "Cell2" }
+      end
+    end
+
+    assert_selector("div.table div.table__header div.table__cell", text: "Cell1")
+    assert_selector("div.table div.table__header div.table__cell.-has-sort", text: "Cell2")
+
+    # Check shared data through Proc
+    assert_selector("div.table div.table__header span", text: "Selectable")
+
+    # Check regular arguments
+    assert_selector('div.table div.table__header[data-argument="regular_argument"]')
+
+    # Check extracted keyword argument
+    assert_selector("div.table div.table__header.extracted_kwarg")
+
+    # Check splatted keyword arguments
+    assert_selector('div.table div.table__header[data-splatted-kwarg="splatted_keyword_argument"]')
+  end
+
+  def test_slot_with_nested_blocks_content_selectable_false
+    render_inline(NestedSharedState::TableComponent.new(selectable: false)) do |table_card|
+      table_card.header do |header|
+        header.cell { "Cell1" }
+        header.cell(class_names: "-has-sort") { "Cell2" }
+      end
+    end
+
+    assert_selector("div.table div.table__header div.table__cell", text: "Cell1")
+    assert_selector("div.table div.table__header div.table__cell.-has-sort", text: "Cell2")
+
+    # Check shared data through Proc
+    refute_selector("div.table div.table__header span", text: "Selectable")
   end
 end

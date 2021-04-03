@@ -13,4 +13,5 @@ module ViewComponent
   autoload :TestHelpers
   autoload :TestCase
   autoload :TemplateError
+  autoload :Translatable
 end

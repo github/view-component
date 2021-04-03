@@ -1,4 +1,4 @@
-<!-- See https://github.com/github/view_component/blob/main/CONTRIBUTING.md#submitting-a-pull-request  -->
+<!-- See https://viewcomponent.org/contributing.html#submitting-a-pull-request  -->
 
 ### Summary
 

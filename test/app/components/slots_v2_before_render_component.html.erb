@@ -1,0 +1,16 @@
+<div>
+  <div class="title">
+    <%= title %>
+  </div>
+  <div class="greetings">
+    <% if greetings.any? %>
+      <% greetings.each do |greeting| %>
+        <div class="greeting">
+          <%= greeting %>
+        </div>
+      <% end %>
+    <% else %>
+      No greetings provided
+    <% end %>
+  </div>
+</div>

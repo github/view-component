@@ -1,4 +1,7 @@
 en:
+  hello: Hello from Rails translations!
+  from:
+    rails: This is coming from Rails
   translations_component:
     title: Lorem ipsum
     subtitle: More lorem ipsum
