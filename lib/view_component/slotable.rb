@@ -8,6 +8,12 @@ module ViewComponent
   module Slotable
     extend ActiveSupport::Concern
 
+    included do
+      # Hash of registered Slots
+      class_attribute :slots
+      self.slots = {}
+    end
+
     class_methods do
       # support initializing slots as:
       #
@@ -62,6 +68,14 @@ module ViewComponent
             collection: collection
           }
         end
+      end
+
+      def inherited(child)
+        # Clone slot configuration into child class
+        # see #test_slots_pollution
+        child.slots = self.slots.clone
+
+        super
       end
     end
 

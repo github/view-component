@@ -1,3 +1,5 @@
+# Jellyswitch
+
 Name: Dave Paola
 
 Github Handle: [@dpaola2](https://github.com/dpaola2)
@@ -28,7 +30,7 @@ class OnOffSwitch < ApplicationComponent
   private
 
   attr_reader :predicate, :path, :disabled, :label
-  
+
   def icon_class
     if predicate
       "fas fa-toggle-on"

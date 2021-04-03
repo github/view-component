@@ -40,6 +40,13 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_selector("input[type='text'][name='name']")
   end
 
+  def test_render_without_template_variant
+    render_inline(InlineComponent.new.with_variant(:email))
+
+    assert_predicate InlineComponent, :compiled?
+    assert_selector("input[type='text'][name='email']")
+  end
+
   def test_render_child_without_template
     render_inline(InlineChildComponent.new)
 
@@ -52,6 +59,33 @@ class ViewComponentTest < ViewComponent::TestCase
 
     assert_text("foo")
     assert_text("bar")
+  end
+
+  def test_renders_slim_with_many_slots
+    render_inline(SlimRendersManyComponent.new) do |c|
+      c.slim_component(message: "Bar A") do
+        "Foo A "
+      end
+      c.slim_component(message: "Bar B") do
+        "Foo B "
+      end
+    end
+
+    assert_selector(".slim-div", text: "Foo A Bar A")
+    assert_selector(".slim-div", text: "Foo B Bar B")
+  end
+
+  def test_renders_slim_with_html_formatted_slot
+    render_inline(SlimHTMLFormattedSlotComponent.new)
+
+    assert_selector("p", text: "HTML Formatted")
+  end
+
+  def test_renders_slim_escaping_dangerous_html_assign
+    render_inline(SlimWithUnsafeHTMLComponent.new)
+
+    refute_selector("script")
+    assert_selector(".slim-div", text: "<script>alert('xss')</script>")
   end
 
   def test_renders_haml_template
@@ -125,7 +159,7 @@ class ViewComponentTest < ViewComponent::TestCase
   def test_renders_partial_template
     render_inline(PartialComponent.new)
 
-    assert_text("hello,partial world!", count: 2)
+    assert_text("hello,partial world!", count: 3)
   end
 
   def test_renders_content_for_template
@@ -203,118 +237,6 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_includes exception.message, ":content is a reserved content area name"
   end
 
-  def test_renders_slots
-    render_inline(SlotsComponent.new(class_names: "mt-4")) do |component|
-      component.slot(:title) do
-        "This is my title!"
-      end
-      component.slot(:subtitle) do
-        "This is my subtitle!"
-      end
-
-      component.slot(:tab) do
-        "Tab A"
-      end
-      component.slot(:tab) do
-        "Tab B"
-      end
-
-      component.slot(:item) do
-        "Item A"
-      end
-      component.slot(:item, highlighted: true) do
-        "Item B"
-      end
-      component.slot(:item) do
-        "Item C"
-      end
-
-      component.slot(:footer, class_names: "text-blue") do
-        "This is the footer"
-      end
-    end
-
-
-    assert_selector(".card.mt-4")
-
-    assert_selector(".title", text: "This is my title!")
-
-    assert_selector(".subtitle", text: "This is my subtitle!")
-
-    assert_selector(".tab", text: "Tab A")
-    assert_selector(".tab", text: "Tab B")
-
-    assert_selector(".item", count: 3)
-    assert_selector(".item.highlighted", count: 1)
-    assert_selector(".item.normal", count: 2)
-
-    assert_selector(".footer.text-blue", text: "This is the footer")
-  end
-
-  def test_invalid_slot_class_raises_error
-    exception = assert_raises ArgumentError do
-      render_inline(BadSlotComponent.new) do |component|
-        component.slot(:title)
-      end
-    end
-
-    assert_includes exception.message, "Title must inherit from ViewComponent::Slot"
-  end
-
-  def test_renders_slots_with_empty_collections
-    render_inline(SlotsComponent.new) do |component|
-      component.slot(:title) do
-        "This is my title!"
-      end
-
-      component.slot(:subtitle) do
-        "This is my subtitle!"
-      end
-
-      component.slot(:footer) do
-        "This is the footer"
-      end
-    end
-
-    assert_text "No tabs provided"
-    assert_text "No items provided"
-  end
-
-  def test_renders_slots_template_raise_with_unknown_content_areas
-    exception = assert_raises ArgumentError do
-      render_inline(SlotsComponent.new) do |component|
-        component.slot(:foo) { "Hello!" }
-      end
-    end
-
-    assert_includes exception.message, "Unknown slot 'foo' - expected one of '[:title, :subtitle, :footer, :tab, :item]'"
-  end
-
-  def test_with_slot_raise_with_duplicate_slot_name
-    exception = assert_raises ArgumentError do
-      SlotsComponent.with_slot :title
-    end
-
-    assert_includes exception.message, "title slot declared multiple times"
-  end
-
-  def test_with_slot_raise_with_content_keyword
-    exception = assert_raises ArgumentError do
-      SlotsComponent.with_slot :content
-    end
-
-    assert_includes exception.message, ":content is a reserved slot name"
-  end
-
-  # In a previous implementation of slots,
-  # the list of slots registered to a component
-  # was accidentally assigned to all components!
-  def test_slots_pollution
-    # this returned:
-    # [SlotsComponent::Subtitle, SlotsComponent::Tab...]
-    assert_empty WrapperComponent.slots
-  end
-
   def test_renders_helper_method_through_proxy
     render_inline(HelpersProxyComponent.new)
 
@@ -382,7 +304,6 @@ class ViewComponentTest < ViewComponent::TestCase
   end
 
   def test_template_changes_are_not_reflected_if_cache_is_not_cleared
-
     render_inline(MyComponent.new)
 
     assert_text("hello,world!")
@@ -433,6 +354,18 @@ class ViewComponentTest < ViewComponent::TestCase
     render_inline(ConditionalRenderComponent.new(should_render: false))
 
     assert_no_text("component was rendered")
+  end
+
+  def test_conditional_rendering_if_content_provided
+    render_inline(ConditionalContentComponent.new)
+
+    refute_component_rendered
+
+    render_inline(ConditionalContentComponent.new) do
+      "Content"
+    end
+
+    assert_text("Content")
   end
 
   def test_render_check
@@ -630,6 +563,36 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_match(/MissingDefaultCollectionParameterComponent initializer must accept `missing_default_collection_parameter` collection parameter/, exception.message)
   end
 
+  def test_component_with_invalid_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidParametersComponent.compile(raise_errors: true)
+      end
+
+      assert_match(/InvalidParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
+  def test_component_with_invalid_named_parameter_names
+    begin
+      old_cache = ViewComponent::CompileCache.cache
+      ViewComponent::CompileCache.cache = Set.new
+
+      exception = assert_raises ArgumentError do
+        InvalidNamedParametersComponent.compile(raise_errors: true)
+      end
+
+      assert_match(/InvalidNamedParametersComponent initializer cannot contain `content` since it will override a public ViewComponent method/, exception.message)
+    ensure
+      ViewComponent::CompileCache.cache = old_cache
+    end
+  end
+
   def test_collection_component_with_trailing_comma_attr_reader
     exception = assert_raises ArgumentError do
       render_inline(
@@ -669,5 +632,24 @@ class ViewComponentTest < ViewComponent::TestCase
     render_inline(RailsConfigComponent.new)
 
     assert_text("http://assets.example.com")
+  end
+
+  def test_inherited_component_inherits_template
+    render_inline(InheritedTemplateComponent.new)
+
+    assert_selector("div", text: "hello,world!")
+  end
+
+  def test_inherited_component_overrides_inherits_template
+    render_inline(InheritedWithOwnTemplateComponent.new)
+
+    assert_selector("div", text: "hello, my own template")
+  end
+
+  def test_inherited_inline_component_inherits_inline_method
+    render_inline(InheritedInlineComponent.new)
+
+    assert_predicate InheritedInlineComponent, :compiled?
+    assert_selector("input[type='text'][name='name']")
   end
 end
