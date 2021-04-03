@@ -1,0 +1,13 @@
+<header>
+  <%= render SlotsV2Component::HeaderComponent.new(classes: header.classes) do %>
+    <%= header.content %>
+  <% end %>
+</header>
+
+<%= items.each do |item| %>
+  <div>
+    <%= render SlotsV2Component::ItemComponent.new(classes: item.classes) do %>
+      <%= item.content %>
+    <% end %>
+  </div>
+<% end %>

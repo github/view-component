@@ -3,9 +3,11 @@
 module ViewComponent
   module VERSION
     MAJOR = 2
-    MINOR = 17
-    PATCH = 1
+    MINOR = 28
+    PATCH = 0
 
     STRING = [MAJOR, MINOR, PATCH].join(".")
   end
 end
+
+puts ViewComponent::VERSION::STRING if __FILE__ == $PROGRAM_NAME

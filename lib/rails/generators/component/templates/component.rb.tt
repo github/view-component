@@ -1,7 +1,15 @@
+# frozen_string_literal: true
+
 class <%= class_name %>Component < <%= parent_class %>
 <%- if initialize_signature -%>
   def initialize(<%= initialize_signature %>)
     <%= initialize_body %>
   end
 <%- end -%>
+<%- if initialize_call_method_for_inline? -%>  
+  def call
+    content_tag :h1, "Hello world!"
+  end
+<%- end -%>
+
 end
