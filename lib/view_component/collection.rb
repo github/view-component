@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "action_view/renderer/collection_renderer" if Rails.version.to_f >= 6.1
+
 module ViewComponent
   class Collection
     def render_in(view_context, &block)

@@ -40,6 +40,13 @@ class ViewComponentTest < ViewComponent::TestCase
     assert_selector("input[type='text'][name='name']")
   end
 
+  def test_render_without_template_variant
+    render_inline(InlineComponent.new.with_variant(:email))
+
+    assert_predicate InlineComponent, :compiled?
+    assert_selector("input[type='text'][name='email']")
+  end
+
   def test_render_child_without_template
     render_inline(InlineChildComponent.new)
 
@@ -669,5 +676,24 @@ class ViewComponentTest < ViewComponent::TestCase
     render_inline(RailsConfigComponent.new)
 
     assert_text("http://assets.example.com")
+  end
+
+  def test_inherited_component_inherits_template
+    render_inline(InheritedTemplateComponent.new)
+
+    assert_selector("div", text: "hello,world!")
+  end
+
+  def test_inherited_component_overrides_inherits_template
+    render_inline(InheritedWithOwnTemplateComponent.new)
+
+    assert_selector("div", text: "hello, my own template")
+  end
+
+  def test_inherited_inline_component_inherits_inline_method
+    render_inline(InheritedInlineComponent.new)
+
+    assert_predicate InheritedInlineComponent, :compiled?
+    assert_selector("input[type='text'][name='name']")
   end
 end

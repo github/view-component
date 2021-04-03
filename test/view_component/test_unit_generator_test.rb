@@ -15,7 +15,7 @@ class ViewComponent::TestUnitGeneratorTest < ::Rails::Generators::TestCase
     File.delete File.expand_path("../../tmp/test/components/dummy_component_test.rb", __FILE__)
   end
 
-  test "generates component" do
+  def test_generates_component
     assert_file "../tmp/test/components/dummy_component_test.rb" do |content|
       assert_match(/render_inline\(DummyComponent.new\(message: "Hello, components!"\)\).css\("span"\).to_html/, content)
     end

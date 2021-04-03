@@ -5,4 +5,5 @@ inherit_gem:
 
 AllCops:
   Exclude:
-    - "test/tmp/**/*"
+    - test/tmp/**/*
+    - vendor/bundle/**/*
