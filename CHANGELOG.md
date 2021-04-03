@@ -1,6 +1,72 @@
 # CHANGELOG
 
-## master
+## main
+
+## 2.24.0
+
+* Add test case for checking presence of `content` in `#render?`.
+
+    *Joel Hawksley*
+
+* Rename `master` branch to `main`.
+
+    *Joel Hawksley*
+
+## 2.23.2
+
+* Fix bug where rendering a component `with_collection` from a controller raised an error.
+
+    *Joel Hawksley*
+
+## 2.23.1
+
+* Fixed out-of-order rendering bug in `ActionView::SlotableV2`
+
+    *Blake Williams*
+
+## 2.23.0
+
+* Add `ActionView::SlotableV2`
+  * `with_slot` becomes `renders_one`.
+  * `with_slot collection: true` becomes `renders_many`.
+  * Slot definitions now accept either a component class, component class name, or a lambda instead of a `class_name:` keyword argument.
+  * Slots now support positional arguments.
+  * Slots no longer use the `content` attribute to render content, instead relying on `to_s`. e.g. `<%= my_slot %>`.
+  * Slot values are no longer set via the `slot` method, and instead use the name of the slot.
+
+    *Blake Williams*
+
+* Add `frozen_string_literal: true` to generated component template.
+
+    *Max Beizer*
+
+## 2.22.1
+
+* Revert refactor that broke rendering for some users.
+
+    *Joel Hawksley*
+
+## 2.22.0
+
+* Add #with_variant to enable inline component variant rendering without template files.
+
+    *Nathan Jones*
+
+## 2.21.0
+
+* Only compile components at application initialization if eager loading is enabled.
+
+    *Joel Hawksley*
+
+## 2.20.0
+
+* Don't add `/test/components/previews` to preview_paths if directory doesn't exist.
+
+    *Andy Holland*
+
+* Add `preview_controller` option to override the controller used for component previews.
+
+    *Matt Swanson, Blake Williams, Juan Manuel Ramallo*
 
 ## 2.19.1
 

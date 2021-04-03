@@ -15,8 +15,9 @@ class ViewComponent::Base::UnitTest < Minitest::Test
       {variant: nil, handler: "haml"}
     ]
 
-    ViewComponent::Base.stub(:matching_views_in_source_location, file_path) do
-      templates = ViewComponent::Base.send(:templates)
+    compiler = ViewComponent::Compiler.new(ViewComponent::Base)
+    compiler.stub(:matching_views_in_source_location, file_path) do
+      templates = compiler.send(:templates)
 
       templates.each_with_index do |template, index|
         assert_equal(template[:path], file_path[index])

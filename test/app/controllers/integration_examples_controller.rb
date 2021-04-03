@@ -34,4 +34,10 @@ class IntegrationExamplesController < ActionController::Base
   def products
     @products = [OpenStruct.new(name: "Radio clock"), OpenStruct.new(name: "Mints")]
   end
+
+  def inline_products
+    products = [OpenStruct.new(name: "Radio clock"), OpenStruct.new(name: "Mints")]
+
+    render(ProductComponent.with_collection(products, notice: "Today only"))
+  end
 end

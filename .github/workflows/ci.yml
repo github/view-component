@@ -34,12 +34,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rails_version: [5.0.0, 5.2.3, 6.0.0, master]
+        rails_version: [5.0.0, 5.2.3, 6.0.0, 6.1.0, master]
         ruby_version: [2.4.x, 2.5.x, 2.6.x, 2.7.x]
         exclude:
-          - rails_version: master
-            ruby_version: 2.4.x
           - rails_version: 6.0.0
+            ruby_version: 2.4.x
+          - rails_version: 6.1.0
+            ruby_version: 2.4.x
+          - rails_version: master
             ruby_version: 2.4.x
     steps:
     - uses: actions/checkout@master

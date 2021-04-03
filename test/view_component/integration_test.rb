@@ -330,6 +330,17 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_select("p", text: "Mints counter: 2")
   end
 
+  def test_renders_inline_collections
+    get "/inline_products"
+
+    assert_select("h1", text: "Product", count: 2)
+    assert_select("h2", text: "Radio clock")
+    assert_select("h2", text: "Mints")
+    assert_select("p", text: "Today only", count: 2)
+    assert_select("p", text: "Radio clock counter: 1")
+    assert_select("p", text: "Mints counter: 2")
+  end
+
   def test_renders_the_previews_in_the_configured_route
     with_preview_route("/previews") do
       get "/previews"
@@ -340,6 +351,13 @@ class IntegrationTest < ActionDispatch::IntegrationTest
 
       get "/previews/preview_component"
       assert_select "title", "Component Previews for preview_component"
+    end
+  end
+
+  def test_renders_the_previews_in_the_configured_controller
+    with_preview_controller("MyPreviewController") do
+      get "/rails/view_components"
+      assert_equal response.body, "Custom controller"
     end
   end
 
@@ -474,5 +492,17 @@ class IntegrationTest < ActionDispatch::IntegrationTest
       assert_select "input[name=?]", "name"
       assert_select "input[value=?]", "Send this form!"
     end
+  end
+
+  def test_renders_link_component_with_active_model
+    get "/link_with_active_model"
+
+    assert_select "a[href='/posts/1']"
+  end
+
+  def test_renders_link_component_with_path
+    get "/link_with_path"
+
+    assert_select "a[href='/posts/1']"
   end
 end
