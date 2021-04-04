@@ -542,6 +542,31 @@ class ViewComponentTest < ViewComponent::TestCase
         ProductReaderOopsComponent.with_collection(["foo"])
       )
     end
+  end
+
+  def test_render_multiple_templates
+    render_inline(MultipleTemplatesComponent.new(mode: :list))
+
+    assert_selector("li", text: "Apple")
+    assert_selector("li", text: "Banana")
+    assert_selector("li", text: "Pear")
+
+    render_inline(MultipleTemplatesComponent.new(mode: :summary))
+
+    assert_selector("div", text: "Apple, Banana, and Pear")
+  end
+
+  private
+
+  def modify_file(file, content)
+    filename = Rails.root.join(file)
+    old_content = File.read(filename)
+    begin
+      File.open(filename, "wb+") { |f| f.write(content) }
+      yield
+    ensure
+      File.open(filename, "wb+") { |f| f.write(old_content) }
+    end
 
     assert_match(/ProductReaderOopsComponent initializer is empty or invalid/, exception.message)
   end
@@ -569,5 +594,36 @@ class ViewComponentTest < ViewComponent::TestCase
 
     assert_predicate InheritedInlineComponent, :compiled?
     assert_selector("input[type='text'][name='name']")
+  end
+
+  def test_does_not_render_if_before_render_raises_abort
+    render_inline(BeforeConditionalRenderComponent.new(should_render: false))
+
+    refute_component_rendered
+  end
+
+  def test_renders_if_before_render_returns_true
+    render_inline(BeforeConditionalRenderComponent.new(should_render: true))
+
+    assert_text("component was rendered")
+  end
+
+  def test_does_not_render_if_symbol_before_render_raises_abort
+    render_inline(BeforeRenderSymbolComponent.new(should_render: false))
+
+    refute_component_rendered
+  end
+
+  def test_renders_if_symbol_before_render_returns_true
+    render_inline(BeforeRenderSymbolComponent.new(should_render: true))
+
+    assert_text("component was rendered")
+  end
+
+  def test_skip_before_render_does_not_call_method
+    component = SkipBeforeRenderComponent.new(should_render: false)
+    render_inline(component)
+
+    assert_text("component was rendered")
   end
 end

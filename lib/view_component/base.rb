@@ -12,8 +12,11 @@ module ViewComponent
   class Base < ActionView::Base
     include ActiveSupport::Configurable
     include ViewComponent::Previewable
+    include ActiveSupport::Callbacks
 
     ViewContextCalledBeforeRenderError = Class.new(StandardError)
+
+    define_callbacks :render
 
     # For CSRF authenticity tokens in forms
     delegate :form_authenticity_token, :protect_against_forgery?, :config, to: :helpers
@@ -74,7 +77,6 @@ module ViewComponent
       before_render
 
       if render?
-        render_template_for(@variant)
       else
         ""
       end
@@ -181,6 +183,18 @@ module ViewComponent
     class << self
       attr_accessor :source_location, :virtual_path
 
+      def before_render(method_name = nil, &block)
+        if block_given?
+          set_callback :render, :before, block
+        else
+          set_callback :render, :before, method_name
+        end
+      end
+
+      def skip_before_render(method_name)
+        skip_callback :render, method_name
+      end
+
       # Render a component collection.
       def with_collection(collection, **args)
         Collection.new(self, collection, **args)
@@ -222,9 +236,6 @@ module ViewComponent
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
       def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
