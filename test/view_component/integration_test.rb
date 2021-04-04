@@ -3,7 +3,7 @@
 require "test_helper"
 
 class IntegrationTest < ActionDispatch::IntegrationTest
-  test "rendering component in a view" do
+  def test_rendering_component_in_a_view
     get "/"
     assert_response :success
 
@@ -11,7 +11,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
   end
 
   if Rails.version.to_f >= 6.1
-    test "rendering component with template annotations enabled" do
+    def test_rendering_component_with_template_annotations_enabled
       get "/"
       assert_response :success
 
@@ -21,7 +21,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "rendering component in a controller" do
+  def test_rendering_component_in_a_controller
     get "/controller_inline_baseline"
 
     assert_select("div", "bar")
@@ -38,7 +38,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_includes inline_response, baseline_response
   end
 
-  test "template changes are not reflected on new request when cache_template_loading is true" do
+  def test_template_changes_are_not_reflected_on_new_request_when_cache_template_loading_is_true
     # cache_template_loading is set to true on the initializer
 
     get "/controller_inline"
@@ -56,7 +56,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "template changes are reflected on new request when cache_template_loading is false" do
+  def test_template_changes_are_reflected_on_new_request_when_cache_template_loading_is_false
     begin
       old_cache = ViewComponent::CompileCache.cache
       ViewComponent::CompileCache.cache = Set.new
@@ -81,7 +81,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "rendering component in a controller using #render_to_string" do
+  def test_rendering_component_in_a_controller_using_render_to_string
     get "/controller_inline_baseline"
 
     assert_select("div", "bar")
@@ -98,7 +98,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_includes to_string_response, baseline_response
   end
 
-  test "rendering component with content" do
+  def test_rendering_component_with_content
     get "/content"
     assert_response :success
     assert_select "div.State--green"
@@ -106,7 +106,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Open"
   end
 
-  test "rendering component with content_for" do
+  def test_rendering_component_with_content_for
     get "/content_areas"
     assert_response :success
 
@@ -115,26 +115,26 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_select(".footer h3", "Bye!")
   end
 
-  test "rendering component with a partial" do
+  def test_rendering_component_with_a_partial
     get "/partial"
     assert_response :success
 
     assert_select("div", "hello,partial world!", count: 2)
   end
 
-  test "rendering component without variant" do
+  def test_rendering_component_without_variant
     get "/variants"
     assert_response :success
     assert_includes response.body, "Default"
   end
 
-  test "rendering component with tablet variant" do
+  def test_rendering_component_with_tablet_variant
     get "/variants?variant=tablet"
     assert_response :success
     assert_includes response.body, "Tablet"
   end
 
-  test "rendering component several times with different variants" do
+  def test_rendering_component_several_times_with_different_variants
     get "/variants?variant=tablet"
     assert_response :success
     assert_includes response.body, "Tablet"
@@ -156,7 +156,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Phone"
   end
 
-  test "rendering component with caching" do
+  def test_rendering_component_with_caching
     Rails.cache.clear
     ActionController::Base.perform_caching = true
 
@@ -172,7 +172,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     Rails.cache.clear
   end
 
-  test "optional rendering component depending on request context" do
+  def test_optional_rendering_component_depending_on_request_context
     get "/render_check"
     assert_response :success
     assert_includes response.body, "Rendered"
@@ -184,19 +184,19 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Rendered"
   end
 
-  test "renders component preview" do
+  def test_renders_component_preview
     get "/rails/view_components/my_component/default"
 
     assert_includes response.body, "<div>hello,world!</div>"
   end
 
-  test "renders preview component default preview" do
+  def test_renders_preview_component_default_preview
     get "/rails/view_components/preview_component/default"
 
     assert_includes response.body, "Click me!"
   end
 
-  test "renders preview component default preview ignoring params" do
+  def test_renders_preview_component_default_preview_ignoring_params
     get "/rails/view_components/preview_component/default?cta=CTA+from+params"
 
     assert_includes response.body, "Click me!"
@@ -204,46 +204,46 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "CTA from params"
   end
 
-  test "renders preview component with_cta preview" do
+  def test_renders_preview_component_with_cta_preview
     get "/rails/view_components/preview_component/without_cta"
 
     assert_includes response.body, "More lorem..."
   end
 
-  test "renders preview component with content preview" do
+  def test_renders_preview_component_with_content_preview
     get "/rails/view_components/preview_component/with_content"
 
     assert_includes response.body, "some content"
   end
 
-  test "renders preview component with tag helper-generated content preview" do
+  def test_renders_preview_component_with_tag_helper_generated_content_preview
     get "/rails/view_components/preview_component/with_tag_helper_in_content"
 
     assert_includes response.body, "<span>some content</span>"
   end
 
-  test "renders preview component with params preview with default values" do
+  def test_renders_preview_component_with_params_preview_with_default_values
     get "/rails/view_components/preview_component/with_params"
 
     assert_includes response.body, "Default CTA"
     assert_includes response.body, "Default title"
   end
 
-  test "renders preview component with params preview with one param" do
+  def test_renders_preview_component_with_params_preview_with_one_param
     get "/rails/view_components/preview_component/with_params?cta=CTA+from+params"
 
     assert_includes response.body, "CTA from params"
     assert_includes response.body, "Default title"
   end
 
-  test "renders preview component with params preview with multiple params" do
+  def test_renders_preview_component_with_params_preview_with_multiple_params
     get "/rails/view_components/preview_component/with_params?cta=CTA+from+params&title=Title+from+params"
 
     assert_includes response.body, "CTA from params"
     assert_includes response.body, "Title from params"
   end
 
-  test "renders preview component with params preview ignoring unsupported params" do
+  def test_renders_preview_component_with_params_preview_ignoring_unsupported_params
     get "/rails/view_components/preview_component/with_params?cta=CTA+from+params&label=Label+from+params"
 
     assert_includes response.body, "CTA from params"
@@ -252,56 +252,57 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Label from params"
   end
 
-  test "renders badge component open preview" do
+  def test_renders_badge_component_open_preview
     get "/rails/view_components/issues/badge_component/open"
 
     assert_includes response.body, "Open"
   end
 
-  test "renders badge component closed preview" do
+  def test_renders_badge_component_closed_preview
     get "/rails/view_components/issues/badge_component/closed"
 
     assert_includes response.body, "Closed"
   end
 
-  test "test preview renders" do
+  def test_preview_renders
     get "/rails/view_components/preview_component/default"
 
     assert_select(".preview-component .btn", "Click me!")
   end
 
-  test "test preview renders with layout" do
+  def test_preview_renders_with_layout
     get "/rails/view_components/my_component/default"
 
     assert_includes response.body, "ViewComponent - Admin - Test"
     assert_select("div", "hello,world!")
   end
 
-  test "test preview renders without layout" do
+  def test_preview_renders_without_layout
     get "/rails/view_components/no_layout/default"
 
     assert_select("div", "hello,world!")
+    refute_includes response.body, "ViewComponent - Test"
   end
 
-  test "test preview renders application's layout by default" do
+  def test_preview_renders_application_s_layout_by_default
     get "/rails/view_components/preview_component/default"
 
     assert_select "title", "ViewComponent - Test"
   end
 
-  test "test preview index renders rails application layout by default" do
+  def test_preview_index_renders_rails_application_layout_by_default
     get "/rails/view_components"
 
     assert_select "title", "Component Previews"
   end
 
-  test "test preview index of a component renders rails application layout by default" do
+  def test_preview_index_of_a_component_renders_rails_application_layout_by_default
     get "/rails/view_components/preview_component"
 
     assert_select "title", "Component Previews for preview_component"
   end
 
-  test "test preview related views are being rendered correctly" do
+  def test_preview_related_views_are_being_rendered_correctly
     get "/rails/view_components"
     assert_select "title", "Component Previews"
 
@@ -312,12 +313,12 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_select "title", "Component Previews for preview_component"
   end
 
-  test "test preview from multiple preview_paths" do
+  def test_preview_from_multiple_preview_paths
     get "/rails/view_components/my_component_lib/default"
     assert_select("div", "hello,world!")
   end
 
-  test "renders collections" do
+  def test_renders_collections
     get "/products"
 
     assert_select("h1", text: "Products for sale")
@@ -329,7 +330,18 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_select("p", text: "Mints counter: 2")
   end
 
-  test "renders the previews in the configured route" do
+  def test_renders_inline_collections
+    get "/inline_products"
+
+    assert_select("h1", text: "Product", count: 2)
+    assert_select("h2", text: "Radio clock")
+    assert_select("h2", text: "Mints")
+    assert_select("p", text: "Today only", count: 2)
+    assert_select("p", text: "Radio clock counter: 1")
+    assert_select("p", text: "Mints counter: 2")
+  end
+
+  def test_renders_the_previews_in_the_configured_route
     with_preview_route("/previews") do
       get "/previews"
       assert_select "title", "Component Previews"
@@ -342,7 +354,14 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "renders singular and collection slots with arguments" do
+  def test_renders_the_previews_in_the_configured_controller
+    with_preview_controller("MyPreviewController") do
+      get "/rails/view_components"
+      assert_equal response.body, "Custom controller"
+    end
+  end
+
+  def test_renders_singular_and_collection_slots_with_arguments
     get "/slots"
 
     assert_select(".card.mt-4")
@@ -366,14 +385,14 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_equal(title_node, expected_title_html)
   end
 
-  test "renders empty slot without error" do
+  def test_renders_empty_slot_without_error
     get "/empty_slot"
 
     assert_response :success
   end
 
   if Rails.version.to_f >= 6.1
-    test "rendering component using the render_component helper raises an error" do
+    def test_rendering_component_using_the_render_component_helper_raises_an_error
       error = assert_raises ActionView::Template::Error do
         get "/render_component"
       end
@@ -382,23 +401,30 @@ class IntegrationTest < ActionDispatch::IntegrationTest
   end
 
   if Rails.version.to_f < 6.1
-    test "rendering component using #render_component" do
+    def test_rendering_component_using_render_component
       get "/render_component"
       assert_includes response.body, "bar"
     end
 
-    test "rendering component in a controller using #render_component" do
+    def test_rendering_component_in_a_controller_using_render_component
       get "/controller_inline_render_component"
       assert_includes response.body, "bar"
     end
 
-    test "rendering component in a controller using #render_component_to_string" do
+    def test_rendering_component_in_a_controller_using_render_component_to_string
       get "/controller_to_string_render_component"
       assert_includes response.body, "bar"
     end
+
+    def test_rendering_component_in_preview_using_render_component_and_monkey_patch_disabled
+      with_render_monkey_patch_config(false) do
+        get "/rails/view_components/monkey_patch_disabled_component/default"
+        assert_includes response.body, "<div>hello,world!</div>"
+      end
+    end
   end
 
-  test "renders the inline component preview examples with default behaviour and with their own templates" do
+  def test_renders_the_inline_component_preview_examples_with_default_behaviour_and_with_their_own_templates
     get "/rails/view_components/inline_component/default"
     assert_select "input" do
       assert_select "[name=?]", "name"
@@ -417,7 +443,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "renders the preview example with its own template and a layout" do
+  def test_renders_the_preview_example_with_its_own_template_and_a_layout
     get "/rails/view_components/my_component/inside_banner"
     assert_includes response.body, "ViewComponent - Admin - Test"
     assert_select ".banner" do
@@ -425,7 +451,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "renders an inline component preview using URL params and a template" do
+  def test_renders_an_inline_component_preview_using_url_params_and_a_template
     get "/rails/view_components/inline_component/with_params?form_title=This is a test form"
     assert_select "form" do
       assert_select "p", "This is a test form"
@@ -433,26 +459,32 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "renders the inline component using a non standard-located template" do
+  def test_renders_the_inline_component_using_a_non_standard_located_template
     get "/rails/view_components/inline_component/with_non_standard_template"
     assert_select "h1", "This is not a standard place to have a preview template"
     assert_select "input[name=?]", "name"
   end
 
-  test "renders an inline component preview using a HAML template" do
+  def test_renders_an_inline_component_preview_using_a_haml_template
     get "/rails/view_components/inline_component/with_haml"
     assert_select "h1", "Some HAML here"
     assert_select "input[name=?]", "name"
   end
 
-  test "raises an error if the template is not present and the render_with_template method is used in the example" do
+  def test_returns_404_when_preview_does_not_exist
+    assert_raises AbstractController::ActionNotFound do
+      get "/rails/view_components/missing_preview"
+    end
+  end
+
+  def test_raises_an_error_if_the_template_is_not_present_and_the_render_with_template_method_is_used_in_the_example
     error = assert_raises ViewComponent::PreviewTemplateError do
       get "/rails/view_components/inline_component/without_template"
     end
     assert_match /preview template for example without_template does not exist/, error.message
   end
 
-  test "renders a preview template using HAML, params from URL, custom template and locals" do
+  def test_renders_a_preview_template_using_haml_params_from_url_custom_template_and_locals
     get "/rails/view_components/inline_component/with_several_options?form_title=Title from params"
 
     assert_select "form" do
@@ -460,5 +492,17 @@ class IntegrationTest < ActionDispatch::IntegrationTest
       assert_select "input[name=?]", "name"
       assert_select "input[value=?]", "Send this form!"
     end
+  end
+
+  def test_renders_link_component_with_active_model
+    get "/link_with_active_model"
+
+    assert_select "a[href='/posts/1']"
+  end
+
+  def test_renders_link_component_with_path
+    get "/link_with_path"
+
+    assert_select "a[href='/posts/1']"
   end
 end

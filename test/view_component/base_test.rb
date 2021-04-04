@@ -15,8 +15,9 @@ class ViewComponent::Base::UnitTest < Minitest::Test
       {variant: nil, handler: "haml"}
     ]
 
-    ViewComponent::Base.stub(:matching_views_in_source_location, file_path) do
-      templates = ViewComponent::Base.send(:templates)
+    compiler = ViewComponent::Compiler.new(ViewComponent::Base)
+    compiler.stub(:matching_views_in_source_location, file_path) do
+      templates = compiler.send(:templates)
 
       templates.each_with_index do |template, index|
         assert_equal(template[:path], file_path[index])
@@ -24,5 +25,21 @@ class ViewComponent::Base::UnitTest < Minitest::Test
         assert_equal(template[:handler], expected[index][:handler])
       end
     end
+  end
+
+  def test_calling_helpers_outside_render_raises
+    component = ViewComponent::Base.new
+    err = assert_raises ViewComponent::Base::ViewContextCalledBeforeRenderError do
+      component.helpers
+    end
+    assert_equal "`helpers` can only be called at render time.", err.message
+  end
+
+  def test_calling_controller_outside_render_raises
+    component = ViewComponent::Base.new
+    err = assert_raises ViewComponent::Base::ViewContextCalledBeforeRenderError do
+      component.controller
+    end
+    assert_equal "`controller` can only be called at render time.", err.message
   end
 end
