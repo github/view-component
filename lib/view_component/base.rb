@@ -7,7 +7,7 @@ require "view_component/compile_cache"
 require "view_component/previewable"
 require "view_component/slotable"
 require "view_component/slotable_v2"
-require "view_component/action_view_compatibility"
+
 
 module ViewComponent
   class Base < ActionView::Base
@@ -58,7 +58,7 @@ module ViewComponent
     # <span title="greeting">Hello, world!</span>
     #
     def render_in(view_context, &block)
-      self.class.compile(raise_errors: true)
+      self.class.ensure_compiled(raise_errors: true)
 
       @view_context = view_context
       @lookup_context ||= view_context.lookup_context
@@ -86,7 +86,7 @@ module ViewComponent
       before_render
 
       if render?
-        render_template_for(@variant)
+        render_template_for(@variant) + _after_render
       else
         ""
       end
@@ -100,6 +100,12 @@ module ViewComponent
 
     def before_render_check
       # noop
+    end
+
+    # Hook used for experimental implementation of CSS encapsulation.
+    # May be removed or modified at any time, without warning.
+    def _after_render
+      ""
     end
 
     def render?
@@ -261,7 +267,7 @@ module ViewComponent
       def inherited(child)
         # Compile so child will inherit compiled `call_*` template methods that
         # `compile` defines
-        compile
+        ensure_compiled
 
         # If Rails application is loaded, add application url_helpers to the component context
         # we need to check this to use this gem as a dependency
@@ -288,10 +294,6 @@ module ViewComponent
       #
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
-      def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -389,14 +391,9 @@ module ViewComponent
         instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
       end
 
-      private
-
       def initialize_parameter_names
         initialize_parameters.map(&:last)
       end
-
-      def initialize_parameters
-        instance_method(:initialize).parameters
       end
 
       def provided_collection_parameter
