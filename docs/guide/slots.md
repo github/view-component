@@ -18,6 +18,8 @@ _To view documentation for content_areas (deprecated) and the original implement
 
 ## Defining slots
 
+**Note**: In versions `< 2.28.0`, `include ViewComponent::SlotableV2` to use slots.
+
 Slots come in three forms:
 
 - [Delegate slots](#delegate-slots) render other components.
@@ -139,7 +141,9 @@ end
 <div>
   <h1><%= header %></h1>
 
-  <%= posts %>
+  <% posts.each do |post| %>
+    <%= post %>
+  <% end %>
 </div>
 ```
 

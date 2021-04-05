@@ -10,7 +10,7 @@ module ViewComponent
       CompileCache.compiled?(component_class)
     end
 
-    def compile(raise_errors: false)
+    def ensure_compiled(raise_errors: false)
       return if compiled?
 
       if template_errors.present?
@@ -19,7 +19,7 @@ module ViewComponent
       end
 
       if component_class.instance_methods(false).include?(:before_render_check)
-        ActiveSupport::Deprecation.warn(
+        ViewComponent::Deprecation.warn(
           "`before_render_check` will be removed in v3.0.0. Use `before_render` instead."
         )
       end
