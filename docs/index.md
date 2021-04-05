@@ -19,7 +19,6 @@ In `Gemfile`, add:
 ```ruby
 gem "view_component", require: "view_component/engine"
 ```
-
 ## Contributors
 
 ViewComponent is built by:

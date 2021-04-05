@@ -44,7 +44,7 @@ module ViewComponent
 
     initializer "view_component.eager_load_actions" do
       ActiveSupport.on_load(:after_initialize) do
-        ViewComponent::Base.descendants.each(&:compile) if Rails.application.config.eager_load
+        ViewComponent::Base.descendants.each(&:ensure_compiled) if Rails.application.config.eager_load
       end
     end
 
