@@ -10,7 +10,7 @@ module ViewComponent
       CompileCache.compiled?(component_class)
     end
 
-    def compile(raise_errors: false)
+    def ensure_compiled(raise_errors: false)
       return if compiled?
 
       if template_errors.present?
