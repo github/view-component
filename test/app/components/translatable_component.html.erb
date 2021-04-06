@@ -1,0 +1,9 @@
+<p class="sidecar shared-key"><%= t(".hello") %></p>
+<p class="sidecar nested"><%= t(".from.sidecar") %></p>
+<p class="sidecar missing"><%= t("from.rails") %></p>
+
+<p class="global shared-key"><%= ::I18n.t("hello") %></p>
+<p class="global nested"><%= ::I18n.t("from.rails") %></p>
+
+<p class="helpers shared-key"><%= helpers.t("hello") %></p>
+<p class="helpers nested"><%= helpers.t("from.rails") %></p>
