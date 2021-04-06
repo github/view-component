@@ -1,0 +1,5 @@
+class <%= class_name %>ComponentPreview < ViewComponent::Preview
+  def default
+    render(<%= class_name %>Component.new)
+  end
+end

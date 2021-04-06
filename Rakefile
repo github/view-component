@@ -19,6 +19,10 @@ task :slotable_benchmark do
   ruby "./performance/slotable_benchmark.rb"
 end
 
+task :translatable_benchmark do
+  ruby "./performance/translatable_benchmark.rb"
+end
+
 namespace :coverage do
   task :report do
     require "simplecov"
