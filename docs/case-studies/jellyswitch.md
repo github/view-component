@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Jellyswitch
 
 Name: Dave Paola

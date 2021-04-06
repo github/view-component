@@ -1,18 +1,9 @@
-# ViewComponent
+
 
 A framework for building reusable, testable & encapsulated view components in Ruby on Rails.
 
 ## Documentation
 
-See [viewcomponent.org](https://viewcomponent.org/) for documentation.
-
-## Installation
-
-In `Gemfile`, add:
-
-```ruby
-gem "view_component", require: "view_component/engine"
-```
 
 ## Contributing
 

@@ -17,9 +17,22 @@ require "minitest/autorun"
 
 # Configure Rails Envinronment
 ENV["RAILS_ENV"] = "test"
+ENV["VIEW_COMPONENT_ENV"] = "test"
 
 require File.expand_path("../config/environment.rb", __FILE__)
 require "rails/test_help"
+
+# Sets custom preview paths in tests.
+#
+# @param new_value [Array<String>] List of preview paths
+# @yield Test code to run
+# @return [void]
+def with_preview_paths(new_value)
+  old_value = Rails.application.config.view_component.preview_paths
+  Rails.application.config.view_component.preview_paths = new_value
+  yield
+  Rails.application.config.view_component.preview_paths = old_value
+end
 
 def with_preview_route(new_value)
   old_value = Rails.application.config.view_component.preview_route
