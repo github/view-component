@@ -2,6 +2,7 @@
 
 class Post
   include ActiveModel::Model
+  include ActiveModel::Conversion
 
-  attr_accessor :title, :published
+
 end
