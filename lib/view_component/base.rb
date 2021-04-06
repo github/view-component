@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-
 require "action_view"
 require "active_support/configurable"
 require "view_component/collection"
@@ -7,7 +6,6 @@ require "view_component/compile_cache"
 require "view_component/previewable"
 require "view_component/slotable"
 require "view_component/slotable_v2"
-require "view_component/action_view_compatibility"
 
 module ViewComponent
   class Base < ActionView::Base
@@ -24,15 +22,6 @@ module ViewComponent
 
     class_attribute :content_areas
     self.content_areas = [] # class_attribute:default doesn't work until Rails 5.2
-
-    # EXPERIMENTAL: This API is experimental and may be removed at any time.
-    # Hook for allowing components to do work as part of the compilation process.
-    #
-    # For example, one might compile component-specific assets at this point.
-    def self._after_compile
-      # noop
-    end
-
     # Entrypoint for rendering components.
     #
     # view_context: ActionView context from calling view
@@ -289,9 +278,6 @@ module ViewComponent
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
       def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -373,30 +359,6 @@ module ViewComponent
         )
       end
 
-      def collection_parameter
-        if provided_collection_parameter
-          provided_collection_parameter
-        else
-          name && name.demodulize.underscore.chomp("_component").to_sym
-        end
-      end
-
-      def collection_counter_parameter
-        "#{collection_parameter}_counter".to_sym
-      end
-
-      def counter_argument_present?
-        instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
-      end
-
-      private
-
-      def initialize_parameter_names
-        initialize_parameters.map(&:last)
-      end
-
-      def initialize_parameters
-        instance_method(:initialize).parameters
       end
 
       def provided_collection_parameter

@@ -8,11 +8,13 @@ title: Resources
 ## ViewComponent libraries
 
 - [Primer ViewComponents](https://primer.style/view-components/)
+- [GOV.UK Rails Components](https://dfe-digital.github.io/govuk-components/)
 
 ## Frameworks using ViewComponent
 
 - [Motion](https://github.com/unabridged/motion)
 - [StimulusReflex](https://docs.stimulusreflex.com/)
+- [ViewComponentReflex](https://github.com/joshleblanc/view_component_reflex)
 
 ## Publicity
 
