@@ -1,0 +1,4 @@
+en:
+  hello: "Hello from sidecar translations!"
+  from:
+    sidecar: This is coming from the sidecar
