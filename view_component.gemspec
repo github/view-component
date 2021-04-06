@@ -37,8 +37,10 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "haml", "~> 5"
   spec.add_development_dependency "slim", "~> 4.0"
   spec.add_development_dependency "better_html", "~> 1"
+  spec.add_development_dependency "jbuilder", "~> 2"
   spec.add_development_dependency "rubocop", "= 0.74"
   spec.add_development_dependency "rubocop-github", "~> 0.13.0"
   spec.add_development_dependency "simplecov", "~> 0.18.0"
   spec.add_development_dependency "simplecov-console", "~> 0.7.2"
+  spec.add_development_dependency "pry", "~> 0.13"
 end

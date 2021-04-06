@@ -1,0 +1,4 @@
+<%= content_tag(:div, **@tag_arguments) do %>
+  <% if @selectable %><span>Selectable</span><% end %>
+  <% cells.each do |cell| %><%= cell %><% end %>
+<% end %>

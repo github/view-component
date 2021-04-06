@@ -80,7 +80,10 @@ module ViewComponent # :nodoc:
         end
 
         path = Dir["#{preview_path}/#{preview_name}_preview/#{example}.html.*"].first
-        Pathname.new(path).relative_path_from(Pathname.new(preview_path)).to_s
+        Pathname.new(path)
+                .relative_path_from(Pathname.new(preview_path))
+                .to_s
+                .sub(/\..*$/, "")
       end
 
       private

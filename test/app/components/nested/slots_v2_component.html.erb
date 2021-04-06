@@ -1,0 +1,19 @@
+<div class="card">
+  <div class="body">
+    <% if items.any? %>
+      <% items.each do |item| %>
+        <div class="item">
+          <%= item %>
+
+          <% if item.thing %>
+            <div class="thing">
+              <%= item.thing %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      No items provided
+    <% end %>
+  </div>
+</div>

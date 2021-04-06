@@ -1,5 +1,7 @@
 # Contributing
 
+_This project is intended to be a safe, welcoming space for collaboration. Contributors are expected to adhere to the Contributor Covenant code of conduct._
+
 Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.
 
 If you have any substantial changes that you would like to make, please [open an issue](http://github.com/github/view_component/issues/new) first to discuss them with us.
@@ -10,15 +12,15 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 ## Submitting a pull request
 
-0. [Fork](https://github.com/github/view_component/fork) and clone the repository
-0. Configure and install the dependencies: `bundle`
-0. Make sure the tests pass on your machine: `bundle exec rake`
-0. Create a new branch: `git checkout -b my-branch-name`
-0. Make your change, add tests, and make sure the tests still pass
-0. Add an entry to the top of `CHANGELOG.md` for your changes
-0. If it's your first time contributing, add yourself to the contributors at the bottom of `README.md`
-0. Push to your fork and [submit a pull request](https://github.com/github/view_component/compare)
-0. Pat yourself on the back and wait for your pull request to be reviewed and merged.
+1. [Fork](https://github.com/github/view_component/fork) and clone the repository.
+1. Configure and install the dependencies: `bundle`.
+1. Make sure the tests pass on your machine: `bundle exec rake`.
+1. Create a new branch: `git checkout -b my-branch-name`.
+1. Make your change, add tests, and make sure the tests still pass.
+1. Add an entry to the top of `CHANGELOG.md` for your changes.
+2. If it's your first time contributing, add yourself to `docs/index.md`.
+3. Push to your fork and [submit a pull request](https://github.com/github/view_component/compare).
+4. Pat yourself on the back and wait for your pull request to be reviewed and merged.
 
 Here are a few things you can do that will increase the likelihood of your pull request being accepted:
 
@@ -26,16 +28,15 @@ Here are a few things you can do that will increase the likelihood of your pull 
 - Keep your change as focused as possible. If there are multiple changes you would like to make that are not dependent upon each other, consider submitting them as separate pull requests.
 - Write a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
 
+## Documentation
+
+1. Navigate to `/docs`.
+1. Configure and install the dependencies: `bundle`.
+1. Run Jekyll: `bundle exec jekyll serve`.
+1. Open the docs site at `http://127.0.0.1:4000/`.
+
 ## Releasing
 
 If you are the current maintainer of this gem:
 
-1. Create a branch for the release: `git checkout -b release-vxx.xx.xx`
-1. Bump gem version in `lib/view_component/version.rb`. Try to adhere to [SemVer](https://semver.org).
-1. Add version heading to `CHANGELOG.md`.
-1. Make a PR to github/view_component.
-1. Merge github/view_component PR
-1. Create a GitHub [release](https://github.com/github/view_component/releases/new) with the pushed tag and populate it with a list of the changes from `CHANGELOG.md`.
-1. Get latest changes from default branch: `git pull origin master`
-1. Build a local gem: `gem build view_component.gemspec`
-1. Push to rubygems.org -- `gem push view_component-VERSION.gem`
+1. Run `./script/release` and follow the instructions.

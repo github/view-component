@@ -330,6 +330,17 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     assert_select("p", text: "Mints counter: 2")
   end
 
+  def test_renders_inline_collections
+    get "/inline_products"
+
+    assert_select("h1", text: "Product", count: 2)
+    assert_select("h2", text: "Radio clock")
+    assert_select("h2", text: "Mints")
+    assert_select("p", text: "Today only", count: 2)
+    assert_select("p", text: "Radio clock counter: 1")
+    assert_select("p", text: "Mints counter: 2")
+  end
+
   def test_renders_the_previews_in_the_configured_route
     with_preview_route("/previews") do
       get "/previews"
@@ -340,6 +351,13 @@ class IntegrationTest < ActionDispatch::IntegrationTest
 
       get "/previews/preview_component"
       assert_select "title", "Component Previews for preview_component"
+    end
+  end
+
+  def test_renders_the_previews_in_the_configured_controller
+    with_preview_controller("MyPreviewController") do
+      get "/rails/view_components"
+      assert_equal response.body, "Custom controller"
     end
   end
 
@@ -378,7 +396,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
       error = assert_raises ActionView::Template::Error do
         get "/render_component"
       end
-      assert_match /undefined method `render_component'/, error.message
+      assert_match(/undefined method `render_component'/, error.message)
     end
   end
 
@@ -463,7 +481,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     error = assert_raises ViewComponent::PreviewTemplateError do
       get "/rails/view_components/inline_component/without_template"
     end
-    assert_match /preview template for example without_template does not exist/, error.message
+    assert_match(/preview template for example without_template does not exist/, error.message)
   end
 
   def test_renders_a_preview_template_using_haml_params_from_url_custom_template_and_locals
