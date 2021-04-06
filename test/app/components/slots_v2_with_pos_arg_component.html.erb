@@ -1,0 +1,9 @@
+<%= items.each do |item| %>
+  <div class="item">
+    <h1 class="<%= item.classes %>"><%= item.title %></h1>
+
+    <div class="item-content">
+      <%= item %>
+    </div>
+  </div>
+<% end %>

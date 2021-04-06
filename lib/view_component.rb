@@ -6,9 +6,12 @@ module ViewComponent
   extend ActiveSupport::Autoload
 
   autoload :Base
+  autoload :Compiler
+  autoload :Deprecation
   autoload :Preview
   autoload :PreviewTemplateError
   autoload :TestHelpers
   autoload :TestCase
   autoload :TemplateError
+  autoload :Translatable
 end

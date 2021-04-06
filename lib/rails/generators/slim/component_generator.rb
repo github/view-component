@@ -9,7 +9,9 @@ module Slim
       class_option :sidecar, type: :boolean, default: false
 
       def copy_view_file
-        template "component.html.slim", destination
+        if !options["inline"]
+          template "component.html.slim", destination
+        end
       end
 
       private
