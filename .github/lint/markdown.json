@@ -4,5 +4,6 @@
   "ol-prefix": false,
   "no-trailing-punctuation": false,
   "no-inline-html": false,
-  "first-line-heading": false
+  "first-line-heading": false,
+  "single-h1": false
 }

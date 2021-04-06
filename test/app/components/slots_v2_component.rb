@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class SlotsV2Component < ViewComponent::Base
-  include ViewComponent::SlotableV2
-
   renders_one :title
   renders_one :subtitle
   renders_one :footer, -> (classes: "", &block) do
