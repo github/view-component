@@ -7,18 +7,11 @@ require "view_component/compile_cache"
 require "view_component/previewable"
 require "view_component/slotable"
 require "view_component/slotable_v2"
-require "view_component/action_view_compatibility"
 
 module ViewComponent
   class Base < ActionView::Base
     include ActiveSupport::Configurable
     include ViewComponent::Previewable
-    include ViewComponent::SlotableV2
-
-    ViewContextCalledBeforeRenderError = Class.new(StandardError)
-
-    RESERVED_PARAMETER = :content
-
     # For CSRF authenticity tokens in forms
     delegate :form_authenticity_token, :protect_against_forgery?, :config, to: :helpers
 
@@ -58,7 +51,7 @@ module ViewComponent
     # <span title="greeting">Hello, world!</span>
     #
     def render_in(view_context, &block)
-      self.class.compile(raise_errors: true)
+      self.class.ensure_compiled(raise_errors: true)
 
       @view_context = view_context
       @lookup_context ||= view_context.lookup_context
@@ -86,7 +79,6 @@ module ViewComponent
       before_render
 
       if render?
-        render_template_for(@variant)
       else
         ""
       end
@@ -100,6 +92,12 @@ module ViewComponent
 
     def before_render_check
       # noop
+    end
+
+    # Hook used for experimental implementation of CSS encapsulation.
+    # May be removed or modified at any time, without warning.
+    def _after_render
+      ""
     end
 
     def render?
@@ -180,7 +178,6 @@ module ViewComponent
     end
 
     attr_reader :view_context
-
     def content
       return @_content if defined?(@_content)
       @_content_evaluated = true
@@ -206,46 +203,6 @@ module ViewComponent
 
     class << self
       attr_accessor :source_location, :virtual_path
-
-      # EXPERIMENTAL: This API is experimental and may be removed at any time.
-      # Find sidecar files for the given extensions.
-      #
-      # The provided array of extensions is expected to contain
-      # strings starting without the "dot", example: `["erb", "haml"]`.
-      #
-      # For example, one might collect sidecar CSS files that need to be compiled.
-      def _sidecar_files(extensions)
-        return [] unless source_location
-
-        extensions = extensions.join(",")
-
-        # view files in a directory named like the component
-        directory = File.dirname(source_location)
-        filename = File.basename(source_location, ".rb")
-        component_name = name.demodulize.underscore
-
-        # Add support for nested components defined in the same file.
-        #
-        # e.g.
-        #
-        # class MyComponent < ViewComponent::Base
-        #   class MyOtherComponent < ViewComponent::Base
-        #   end
-        # end
-        #
-        # Without this, `MyOtherComponent` will not look for `my_component/my_other_component.html.erb`
-        nested_component_files = if name.include?("::") && component_name != filename
-          Dir["#{directory}/#{filename}/#{component_name}.*{#{extensions}}"]
-        else
-          []
-        end
-
-        # view files in the same directory as the component
-        sidecar_files = Dir["#{directory}/#{component_name}.*{#{extensions}}"]
-
-        sidecar_directory_files = Dir["#{directory}/#{component_name}/#{filename}.*{#{extensions}}"]
-
-        (sidecar_files - [source_location] + sidecar_directory_files + nested_component_files).uniq
       end
 
       # Render a component collection.
@@ -261,7 +218,7 @@ module ViewComponent
       def inherited(child)
         # Compile so child will inherit compiled `call_*` template methods that
         # `compile` defines
-        compile
+        ensure_compiled
 
         # If Rails application is loaded, add application url_helpers to the component context
         # we need to check this to use this gem as a dependency
@@ -288,10 +245,6 @@ module ViewComponent
       #
       # Do as much work as possible in this step, as doing so reduces the amount
       # of work done each time a component is rendered.
-      def compile(raise_errors: false)
-        template_compiler.compile(raise_errors: raise_errors)
-      end
-
       def template_compiler
         @_template_compiler ||= Compiler.new(self)
       end
@@ -389,14 +342,9 @@ module ViewComponent
         instance_method(:initialize).parameters.map(&:second).include?(collection_counter_parameter)
       end
 
-      private
-
       def initialize_parameter_names
         initialize_parameters.map(&:last)
       end
-
-      def initialize_parameters
-        instance_method(:initialize).parameters
       end
 
       def provided_collection_parameter
