@@ -14,9 +14,12 @@ module ViewComponent
       options.render_monkey_patch_enabled = true if options.render_monkey_patch_enabled.nil?
       options.show_previews = Rails.env.development? if options.show_previews.nil?
       options.preview_route ||= ViewComponent::Base.preview_route
+      options.preview_controller ||= ViewComponent::Base.preview_controller
 
       if options.show_previews
-        options.preview_paths << "#{Rails.root}/test/components/previews" if defined?(Rails.root)
+        options.preview_paths << "#{Rails.root}/test/components/previews" if defined?(Rails.root) && Dir.exist?(
+          "#{Rails.root}/test/components/previews"
+        )
 
         if options.preview_path.present?
           ActiveSupport::Deprecation.warn(
@@ -41,7 +44,7 @@ module ViewComponent
 
     initializer "view_component.eager_load_actions" do
       ActiveSupport.on_load(:after_initialize) do
-        ViewComponent::Base.descendants.each(&:compile)
+        ViewComponent::Base.descendants.each(&:ensure_compiled) if Rails.application.config.eager_load
       end
     end
 
@@ -88,8 +91,10 @@ module ViewComponent
 
       if options.show_previews
         app.routes.prepend do
-          get options.preview_route, to: "view_components#index", as: :preview_view_components, internal: true
-          get "#{options.preview_route}/*path", to: "view_components#previews", as: :preview_view_component, internal: true
+          preview_controller = options.preview_controller.sub(/Controller$/, "").underscore
+
+          get options.preview_route, to: "#{preview_controller}#index", as: :preview_view_components, internal: true
+          get "#{options.preview_route}/*path", to: "#{preview_controller}#previews", as: :preview_view_component, internal: true
         end
       end
 
