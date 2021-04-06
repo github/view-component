@@ -343,6 +343,13 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_renders_the_previews_in_the_configured_controller
+    with_preview_controller("MyPreviewController") do
+      get "/rails/view_components"
+      assert_equal response.body, "Custom controller"
+    end
+  end
+
   def test_renders_singular_and_collection_slots_with_arguments
     get "/slots"
 

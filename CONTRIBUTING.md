@@ -16,7 +16,7 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 0. Create a new branch: `git checkout -b my-branch-name`
 0. Make your change, add tests, and make sure the tests still pass
 0. Add an entry to the top of `CHANGELOG.md` for your changes
-0. If it's your first time contributing, add yourself to the contributors at the bottom of `README.md`
+0. If it's your first time contributing, add yourself to the contributors at the bottom of `docs/index.md`
 0. Push to your fork and [submit a pull request](https://github.com/github/view_component/compare)
 0. Pat yourself on the back and wait for your pull request to be reviewed and merged.
 
