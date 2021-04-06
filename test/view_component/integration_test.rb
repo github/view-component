@@ -396,7 +396,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
       error = assert_raises ActionView::Template::Error do
         get "/render_component"
       end
-      assert_match /undefined method `render_component'/, error.message
+      assert_match(/undefined method `render_component'/, error.message)
     end
   end
 
@@ -481,7 +481,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     error = assert_raises ViewComponent::PreviewTemplateError do
       get "/rails/view_components/inline_component/without_template"
     end
-    assert_match /preview template for example without_template does not exist/, error.message
+    assert_match(/preview template for example without_template does not exist/, error.message)
   end
 
   def test_renders_a_preview_template_using_haml_params_from_url_custom_template_and_locals
