@@ -1,4 +1,8 @@
-#### Slots V1 (deprecated)
+---
+nav_exclude: true
+---
+
+# Slots V1 (deprecated)
 
 _Slots V1 is now deprecated and will be removed in 3.0. Please migrate to [Slots V2](/index.md#slots)_
 
@@ -10,7 +14,7 @@ Slots declared with `collection: true` can be rendered multiple times. They prov
 
 To learn more about the design of the Slots API, see [#348](https://github.com/github/view_component/pull/348) and [#325](https://github.com/github/view_component/discussions/325).
 
-##### Defining Slots
+## Defining Slots
 
 Slots are defined by `with_slot`:
 
@@ -26,7 +30,7 @@ To define a slot with a custom Ruby class, pass `class_name`:
 
 _Note: Slot classes must be subclasses of `ViewComponent::Slot`._
 
-##### Example ViewComponent with Slots
+## Example ViewComponent with Slots
 
 `# box_component.rb`
 
