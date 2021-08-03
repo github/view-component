@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ViewComponent - Global For Action - Test</title>
+  <%= stylesheet_link_tag 'application' %>
+</head>
+<body data-layout="with_content_for">
+  <%= yield %>
+  Foo: <%= content_for(:foo) %>
+</body>
+</html>

@@ -19,6 +19,8 @@ title: Changelog
 
     *Ryo.gift*
 
+* Add tests for `layout` usage when rendering via controller.
+
 ## 2.36.0
 
 * Add `slot_type` helper method.
