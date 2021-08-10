@@ -7,6 +7,10 @@ title: Changelog
 
 ## main
 
+* Increase clarity around purpose and use of slots.
+
+    *Simon Fish*
+
 ## 2.37.0
 
 * Clarify slots example in docs to reduce naming confusion.
