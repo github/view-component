@@ -8,6 +8,12 @@ module ViewComponent
   module SlotableV2
     extend ActiveSupport::Concern
 
+    attr_writer :__vc__slot_index
+
+    def slot_index
+      @__vc__slot_index
+    end
+
     # Setup component slot state
     included do
       # Hash of registered Slots
@@ -284,6 +290,10 @@ module ViewComponent
 
       if slot_definition[:collection]
         @__vc_set_slots[slot_name] ||= []
+
+        # set the index to the next index in the array (aka, the current length)
+        slot.slot_index = @__vc_set_slots[slot_name].length
+
         @__vc_set_slots[slot_name].push(slot)
       else
         @__vc_set_slots[slot_name] = slot

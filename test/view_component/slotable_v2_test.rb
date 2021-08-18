@@ -133,6 +133,16 @@ class SlotsV2sTest < ViewComponent::TestCase
     assert_includes exception.message, "declares the title slot multiple times"
   end
 
+  def test_slot_index
+    render_inline(SlotsV2SlotIndexComponent.new) do |component|
+      component.item(id: "item-1")
+      component.item(id: "item-2")
+    end
+
+    assert_selector("#item-1", text: "Slot index: 0")
+    assert_selector("#item-2", text: "Slot index: 1")
+  end
+
   def test_sub_component_with_positional_args
     render_inline(SlotsV2WithPosArgComponent.new(classes: "mt-4")) do |component|
       component.item("my item", classes: "hello") { "My rad item" }

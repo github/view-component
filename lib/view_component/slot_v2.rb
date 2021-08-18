@@ -67,6 +67,10 @@ module ViewComponent
       @content
     end
 
+    def slot_index=(index)
+      @__vc_component_instance.__vc__slot_index = index
+    end
+
     # Allow access to public component methods via the wrapper
     #
     # e.g.
