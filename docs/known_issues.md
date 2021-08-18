@@ -5,9 +5,9 @@ title: Known issues
 
 # Known issues
 
-## form_for compatibility
+## Compatibility with Rails Forms
 
-ViewComponent is [not currently compatible](https://github.com/github/view_component/issues/241) with `form_for` helpers.
+ViewComponent works for most cases using form helpers in Rails. See the [forms](practical-examples/forms.md) guide in the Practical Examples section for more information on compatibility.
 
 ## Inconsistent controller rendering behavior between Rails versions
 
