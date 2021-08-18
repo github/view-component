@@ -9,7 +9,7 @@ parent: Guide
 Unit test components using the `render_inline` test helper, asserting against the rendered output:
 
 ```ruby
-require "view_component/test_case"
+require "test_helper"
 
 class ExampleComponentTest < ViewComponent::TestCase
   def test_render_component
