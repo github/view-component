@@ -36,18 +36,20 @@ class SlotableTest < ViewComponent::TestCase
 
     assert_selector(".card.mt-4")
 
-    assert_selector(".title", text: "This is my title!")
+    within(".card.mt-4") do
+      assert_selector(".title", text: "This is my title!")
 
-    assert_selector(".subtitle", text: "This is my subtitle!")
+      assert_selector(".subtitle", text: "This is my subtitle!")
 
-    assert_selector(".tab", text: "Tab A")
-    assert_selector(".tab", text: "Tab B")
+      assert_selector(".tab", text: "Tab A")
+      assert_selector(".tab", text: "Tab B")
 
-    assert_selector(".item", count: 3)
-    assert_selector(".item.highlighted", count: 1)
-    assert_selector(".item.normal", count: 2)
+      assert_selector(".item", count: 3)
+      assert_selector(".item.highlighted", count: 1)
+      assert_selector(".item.normal", count: 2)
 
-    assert_selector(".footer.text-blue", text: "This is the footer")
+      assert_selector(".footer.text-blue", text: "This is the footer")
+    end
   end
 
   def test_inherited_component_renders_slots
