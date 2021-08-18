@@ -90,6 +90,10 @@ title: Changelog
 
     *Simon Fish*
 
+* Add example gem and the _Creating a Gem_ tutorial in the guide.
+
+    *Eric Berry*
+
 ## 2.35.0
 
 * Only load assets for Preview source highlighting if previews are enabled.

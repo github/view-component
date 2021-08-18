@@ -1,0 +1,8 @@
+/.bundle/
+/doc/
+/log/*.log
+/pkg/
+/tmp/
+/test/dummy/log/*.log
+/test/dummy/tmp/
+.byebug_history
