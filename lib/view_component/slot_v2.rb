@@ -64,7 +64,7 @@ module ViewComponent
           @__vc_content_set_by_with_content
              end
 
-      @content
+      @content = @content.to_s
     end
 
     # Allow access to public component methods via the wrapper

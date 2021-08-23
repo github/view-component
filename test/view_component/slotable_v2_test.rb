@@ -272,6 +272,17 @@ class SlotsV2sTest < ViewComponent::TestCase
     assert_selector("p", text: "Footer part 2")
   end
 
+  def test_slot_with_block_content_returning_nil
+    component = SlotsV2Component.new
+    slot = component.title nil
+    slot.__vc_content_block = Proc.new { nil }
+    # Render the component so that the slot has a view_context
+    render_inline component
+
+    # No matter what, the slot shouldn't return nil from `to_s`
+    assert_not_nil(slot.to_s)
+  end
+
   def test_lambda_slot_with_missing_block
     render_inline(SlotsV2Component.new(classes: "mt-4")) do |component|
       component.footer(classes: "text-blue")
