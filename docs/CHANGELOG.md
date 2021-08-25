@@ -7,6 +7,10 @@ title: Changelog
 
 ## main
 
+* Display preview source on previews that exclusively use templates
+
+    *Edwin Mak*, *Joel Hawksley*
+
 * Clarify documentation of `with_variant` as an override of Action Pack.
 
     *Blake Williams*, *Cameron Dutro*, *Joel Hawksley*
