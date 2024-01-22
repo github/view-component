@@ -234,6 +234,10 @@ module ViewComponent
     MESSAGE = "ViewComponent SystemTest controller attempted to load a file outside of the expected directory."
   end
 
+  class StrictHelperError < BaseError
+    MESSAGE = "ViewComponent strict helper mode is enbaled so #helpers is disabled."
+  end
+
   class AlreadyDefinedPolymorphicSlotSetterError < StandardError
     MESSAGE =
       "A method called 'SETTER_METHOD_NAME' already exists and would be overwritten by the 'SETTER_NAME' polymorphic " \

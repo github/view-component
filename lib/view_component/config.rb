@@ -25,7 +25,8 @@ module ViewComponent
           preview_paths: default_preview_paths,
           test_controller: "ApplicationController",
           default_preview_layout: nil,
-          capture_compatibility_patch_enabled: false
+          capture_compatibility_patch_enabled: false,
+          strict_helpers_enabled: false
         })
       end
 
@@ -171,6 +172,11 @@ module ViewComponent
       # Enables the experimental capture compatibility patch that makes ViewComponent
       # compatible with forms, capture, and other built-ins.
       # previews.
+      # Defaults to `false`.
+
+      # @!attribute strict_helpers_enabled
+      # @return [Boolean]
+      # Enables the experimental strict helpers mode wich throws ViewComponent::StrictHelperError when helpers is used
       # Defaults to `false`.
 
       def default_preview_paths
