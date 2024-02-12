@@ -251,18 +251,18 @@ module ViewComponent
       rescue => e # rubocop:disable Style/RescueStandardError
         e.set_backtrace e.backtrace.tap(&:shift)
         if ViewComponent::Base.strict_helpers_enabled
-          raise e, <<~MESSAGE.chomp if view_context && e.is_a?(NameError) && (__vc_original_view_context.respond_to?(method_name)|| controller.view_context.respond_to?(method_name))
-          #{e.message}
+          raise e, <<~MESSAGE.chomp if view_context && e.is_a?(NameError) && (__vc_original_view_context.respond_to?(method_name) || controller.view_context.respond_to?(method_name))
+            #{e.message}
 
-            You may be trying to call a method provided as a view helper. To use it try decalring it using use_helpers :#{method_name}'?
+              You may be trying to call a method provided as a view helper. To use it try decalring it using use_helpers :#{method_name}'?
           MESSAGE
-        else
-          raise e, <<~MESSAGE.chomp if view_context && e.is_a?(NameError) && helpers.respond_to?(method_name)
+        elsif view_context && e.is_a?(NameError) && helpers.respond_to?(method_name)
+          raise e, <<~MESSAGE.chomp
+end
             #{e.message}
 
             You may be trying to call a method provided as a view helper. Did you mean `helpers.#{method_name}'?
           MESSAGE
-        end
 
         raise
       end
