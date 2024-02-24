@@ -182,6 +182,10 @@ def with_strict_helpers_config(enabled, &block)
   with_config_option(:strict_helpers_enabled, enabled, &block)
 end
 
+def with_helpers_enabled_config(enabled, &block)
+  with_config_option(:helpers_enabled, enabled, &block)
+end
+
 def with_compiler_mode(mode)
   previous_mode = ViewComponent::Compiler.mode
   ViewComponent::Compiler.mode = mode

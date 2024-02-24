@@ -251,7 +251,7 @@ module ViewComponent
         super
       rescue => e # rubocop:disable Style/RescueStandardError
         e.set_backtrace e.backtrace.tap(&:shift)
-        if ViewComponent::Base.config.strict_helpers_enabled
+        if !ViewComponent::Base.config.helpers_enabled
           raise e, <<~MESSAGE.chomp if view_context && e.is_a?(NameError) && (__vc_original_view_context.respond_to?(method_name) || controller.view_context.respond_to?(method_name))
             #{e.message}
 
