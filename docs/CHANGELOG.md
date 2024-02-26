@@ -10,7 +10,7 @@ nav_order: 5
 
 ## main
 
-* Add Strict helpers mode.
+* Add `helpers_enabled` config.
 
     *Reegan Viljoen*
 
