@@ -37,9 +37,8 @@ module ViewComponent
     RESERVED_PARAMETER = :content
     VC_INTERNAL_DEFAULT_FORMAT = :html
 
-    use_helpers :form_authenticity_token, :protect_against_forgery?, :config, :content_security_policy_nonce
-
     # For CSRF authenticity tokens in forms and Content Security Policy nonces
+    use_helpers :form_authenticity_token, :protect_against_forgery?, :config, :content_security_policy_nonce
 
     # Config option that strips trailing whitespace in templates before compiling them.
     class_attribute :__vc_strip_trailing_whitespace, instance_accessor: false, instance_predicate: false
