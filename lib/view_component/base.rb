@@ -103,6 +103,13 @@ module ViewComponent
       @__vc_content_evaluated = false
       @__vc_render_in_block = block
 
+      if self.class.send(:__vc_content_is_a_slot?)
+        @__vc_content_evaluated = true
+        if __vc_render_in_block_provided?
+          view_context.capture(self, &@__vc_render_in_block)
+        end
+      end
+
       before_render
 
       if render?
@@ -549,6 +556,10 @@ module ViewComponent
           child.instance_variable_set(:@__vc_ancestor_calls, vc_ancestor_calls)
         end
 
+        if defined?(@__vc_content_is_a_slot)
+          child.instance_variable_set(:@__vc_content_is_a_slot, @__vc_content_is_a_slot)
+        end
+
         super
       end
 
@@ -686,6 +697,19 @@ module ViewComponent
 
       def provided_collection_parameter
         @provided_collection_parameter ||= nil
+      end
+
+      def __vc_content_is_a_slot?
+        defined?(@__vc_content_is_a_slot) && @__vc_content_is_a_slot
+      end
+
+      def content_is_a_slot!
+        @__vc_content_is_a_slot = true
+        renders_one :content
+      end
+
+      def do_not_use_content_as_a_slot!
+        @__vc_content_is_a_slot = false
       end
     end
 

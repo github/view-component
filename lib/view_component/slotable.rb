@@ -298,8 +298,10 @@ module ViewComponent
       end
 
       def validate_plural_slot_name(slot_name)
-        if RESERVED_NAMES[:plural].include?(slot_name.to_sym)
-          raise ReservedPluralSlotNameError.new(name, slot_name)
+        if slot_name.to_sym == :contents && !__vc_content_is_a_slot?
+          if RESERVED_NAMES[:plural].include?(slot_name.to_sym)
+            raise ReservedPluralSlotNameError.new(name, slot_name)
+          end
         end
 
         raise_if_slot_name_uncountable(slot_name)
@@ -309,12 +311,12 @@ module ViewComponent
       end
 
       def validate_singular_slot_name(slot_name)
-        if slot_name.to_sym == :content
+        if slot_name.to_sym == :content && !__vc_content_is_a_slot?
           raise ContentSlotNameError.new(name)
-        end
-
-        if RESERVED_NAMES[:singular].include?(slot_name.to_sym)
-          raise ReservedSingularSlotNameError.new(name, slot_name)
+        elsif !__vc_content_is_a_slot?
+          if RESERVED_NAMES[:singular].include?(slot_name.to_sym)
+            raise ReservedSingularSlotNameError.new(name, slot_name)
+          end
         end
 
         raise_if_slot_conflicts_with_call(slot_name)

@@ -819,4 +819,62 @@ class SlotableTest < ViewComponent::TestCase
   def test_slot_name_methods_are_not_shared_accross_components
     assert_not_equal SlotsComponent.instance_method(:title).owner, SlotNameOverrideComponent::OtherComponent.instance_method(:title).owner
   end
+
+  def test_content_as_a_slot_component
+    component = ContentAsSlotComponent.new
+    render_inline(component) do |c|
+      c.with_content do
+        "The truth is out there"
+      end
+    end
+
+    assert component.content?
+    assert_selector "div", text: "The truth is out there"
+  end
+
+  def test_content_as_a_slot_component_with_content
+    component = ContentAsSlotComponent.new
+    component.with_content do
+      "The truth is out there"
+    end
+    render_inline(component)
+
+    assert component.content?
+    assert_selector "div", text: "The truth is out there"
+  end
+
+  def test_content_as_a_slot_inheritance
+    new_component_class = Class.new(ContentAsSlotComponent)
+    assert new_component_class.send(:__vc_content_is_a_slot?)
+  end
+
+  def test_content_is_not_a_slot
+    new_component_class = Class.new(SlotsComponent) do
+      do_not_use_content_as_a_slot!
+    end
+    refute new_component_class.send(:__vc_content_is_a_slot?)
+
+    render_inline(SlotsComponent.new) do |component|
+      component.with_title do
+        "This is my title!"
+      end
+
+      component.with_subtitle do
+        "This is my subtitle!"
+      end
+
+      component.with_footer do
+        "This is the footer"
+      end
+    end
+
+    assert_text "No tabs provided"
+    assert_text "No items provided"
+  end
+
+  def test_content_is_not_a_slot_inheritance
+    refute ContentNotASlotComponent.send(:__vc_content_is_a_slot?)
+    new_component_class = Class.new(ContentNotASlotComponent)
+    refute new_component_class.send(:__vc_content_is_a_slot?)
+  end
 end
