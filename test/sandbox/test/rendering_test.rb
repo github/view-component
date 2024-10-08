@@ -1240,4 +1240,21 @@ class RenderingTest < ViewComponent::TestCase
 
     assert_text("foo")
   end
+
+  def test_cache_component
+    component = CacheComponent.new(foo: "foo", bar: "bar")
+    render_inline(component)
+
+    assert_selector(".cache-component__cache-key", text: component.cache_key)
+    assert_selector(".cache-component__cache-message", text: "foo bar")
+
+    render_inline(CacheComponent.new(foo: "foo", bar: "bar"))
+
+    assert_selector(".cache-component__cache-key", text: component.cache_key)
+
+    render_inline(CacheComponent.new(foo: "foo", bar: "baz"))
+
+    refute_selector(".cache-component__cache-key", text: component.cache_key)
+    refute_selector(".cache-component__cache-message", text: "foo bar")
+  end
 end

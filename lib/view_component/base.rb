@@ -15,6 +15,7 @@ require "view_component/template"
 require "view_component/translatable"
 require "view_component/with_content_helper"
 require "view_component/use_helpers"
+require "view_component/cache_on"
 
 module ViewComponent
   class Base < ActionView::Base
@@ -34,6 +35,7 @@ module ViewComponent
     include ViewComponent::Slotable
     include ViewComponent::Translatable
     include ViewComponent::WithContentHelper
+    include ViewComponent::CacheOn
 
     RESERVED_PARAMETER = :content
     VC_INTERNAL_DEFAULT_FORMAT = :html
