@@ -30,7 +30,12 @@ module ViewComponent
         @component.superclass.compile(raise_errors: raise_errors)
       end
 
-      return if gather_template_errors(raise_errors).any?
+      if template_errors.present?
+        raise TemplateError.new(template_errors) if raise_errors
+
+        # this return is load bearing, and prevents the component from being considered "compiled?"
+        return false
+      end
 
       if raise_errors
         @component.validate_initialization_parameters!
@@ -98,70 +103,70 @@ module ViewComponent
       end
     end
 
-    def gather_template_errors(raise_errors)
-      errors = []
+    def template_errors
+      @_template_errors ||= begin
+        errors = []
 
-      errors << "Couldn't find a template file or inline render method for #{@component}." if @templates.empty?
+        errors << "Couldn't find a template file or inline render method for #{@component}." if @templates.empty?
 
-      # We currently allow components to have both an inline call method and a template for a variant, with the
-      # inline call method overriding the template. We should aim to change this in v4 to instead
-      # raise an error.
-      @templates.reject(&:inline_call?)
-        .map { |template| [template.variant, template.format] }
-        .tally
-        .select { |_, count| count > 1 }
-        .each do |tally|
-        variant, this_format = tally.first
+        # We currently allow components to have both an inline call method and a template for a variant, with the
+        # inline call method overriding the template. We should aim to change this in v4 to instead
+        # raise an error.
+        @templates.reject(&:inline_call?)
+          .map { |template| [template.variant, template.format] }
+          .tally
+          .select { |_, count| count > 1 }
+          .each do |tally|
+          variant, this_format = tally.first
 
-        variant_string = " for variant `#{variant}`" if variant.present?
+          variant_string = " for variant `#{variant}`" if variant.present?
 
-        errors << "More than one #{this_format.upcase} template found#{variant_string} for #{@component}. "
+          errors << "More than one #{this_format.upcase} template found#{variant_string} for #{@component}. "
+        end
+
+        default_template_types = @templates.each_with_object(Set.new) do |template, memo|
+          next if template.variant
+
+          memo << :template_file if !template.inline_call?
+          memo << :inline_render if template.inline_call? && template.defined_on_self?
+
+          memo
+        end
+
+        if default_template_types.length > 1
+          errors <<
+            "Template file and inline render method found for #{@component}. " \
+            "There can only be a template file or inline render method per component."
+        end
+
+        # If a template has inline calls, they can conflict with template files the component may use
+        # to render. This attempts to catch and raise that issue before run time. For example,
+        # `def render_mobile` would conflict with a sidecar template of `component.html+mobile.erb`
+        duplicate_template_file_and_inline_call_variants =
+          @templates.reject(&:inline_call?).map(&:variant) &
+          @templates.select { _1.inline_call? && _1.defined_on_self? }.map(&:variant)
+
+        unless duplicate_template_file_and_inline_call_variants.empty?
+          count = duplicate_template_file_and_inline_call_variants.count
+
+          errors <<
+            "Template #{"file".pluralize(count)} and inline render #{"method".pluralize(count)} " \
+            "found for #{"variant".pluralize(count)} " \
+            "#{duplicate_template_file_and_inline_call_variants.map { |v| "'#{v}'" }.to_sentence} " \
+            "in #{@component}. There can only be a template file or inline render method per variant."
+        end
+
+        @templates.select(&:variant).each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |template, memo|
+          memo[template.normalized_variant_name] << template.variant
+          memo
+        end.each do |_, variant_names|
+          next unless variant_names.length > 1
+
+          errors << "Colliding templates #{variant_names.sort.map { |v| "'#{v}'" }.to_sentence} found in #{@component}."
+        end
+
+        errors
       end
-
-      default_template_types = @templates.each_with_object(Set.new) do |template, memo|
-        next if template.variant
-
-        memo << :template_file if !template.inline_call?
-        memo << :inline_render if template.inline_call? && template.defined_on_self?
-
-        memo
-      end
-
-      if default_template_types.length > 1
-        errors <<
-          "Template file and inline render method found for #{@component}. " \
-          "There can only be a template file or inline render method per component."
-      end
-
-      # If a template has inline calls, they can conflict with template files the component may use
-      # to render. This attempts to catch and raise that issue before run time. For example,
-      # `def render_mobile` would conflict with a sidecar template of `component.html+mobile.erb`
-      duplicate_template_file_and_inline_call_variants =
-        @templates.reject(&:inline_call?).map(&:variant) &
-        @templates.select { _1.inline_call? && _1.defined_on_self? }.map(&:variant)
-
-      unless duplicate_template_file_and_inline_call_variants.empty?
-        count = duplicate_template_file_and_inline_call_variants.count
-
-        errors <<
-          "Template #{"file".pluralize(count)} and inline render #{"method".pluralize(count)} " \
-          "found for #{"variant".pluralize(count)} " \
-          "#{duplicate_template_file_and_inline_call_variants.map { |v| "'#{v}'" }.to_sentence} " \
-          "in #{@component}. There can only be a template file or inline render method per variant."
-      end
-
-      @templates.select(&:variant).each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |template, memo|
-        memo[template.normalized_variant_name] << template.variant
-        memo
-      end.each do |_, variant_names|
-        next unless variant_names.length > 1
-
-        errors << "Colliding templates #{variant_names.sort.map { |v| "'#{v}'" }.to_sentence} found in #{@component}."
-      end
-
-      raise TemplateError.new(errors, @templates) if errors.any? && raise_errors
-
-      errors
     end
 
     def gather_templates

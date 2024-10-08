@@ -544,11 +544,6 @@ class RenderingTest < ViewComponent::TestCase
 
     assert_includes(
       error.message,
-      "ViewComponent::Template:"
-    )
-
-    assert_includes(
-      error.message,
       "Template file and inline render method found for variant 'phone' in " \
       "VariantTemplateAndInlineVariantTemplateComponent."
     )

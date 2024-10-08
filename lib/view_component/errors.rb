@@ -20,12 +20,6 @@ module ViewComponent
     def initialize(errors, templates = nil)
       message = errors.join("\n")
 
-      if templates
-        message << "\n"
-        message << "Templates:\n"
-        message << templates.map(&:inspect).join("\n")
-      end
-
       super(message)
     end
   end
