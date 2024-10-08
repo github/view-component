@@ -38,11 +38,11 @@ nav_order: 5
 
     *Alberto Rocha*
 
-## 3.16.0
-
 * Fix development mode race condition that caused an invalid duplicate template error.
 
     *Blake Williams*
+
+## 3.16.0
 
 * Add template information to multiple template error messages.
 
