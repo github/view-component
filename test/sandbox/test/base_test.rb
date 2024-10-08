@@ -122,6 +122,18 @@ class ViewComponent::Base::UnitTest < Minitest::Test
     assert !exception_message_regex.match?(exception.message)
   end
 
+  def test_no_heleprs_error_if_helpers_disabled
+    with_helpers_enabled_config(false) do
+      exception = assert_raises(NoMethodError) { Class.new(ViewComponent::Base).new.current_user }
+      exception_message_regex = Regexp.new <<~MESSAGE.chomp, Regexp::MULTILINE
+        undefined method `current_user' for .*
+
+        You may be trying to call a method provided as a view helper. To use it try decalring it using use_helpers :current_user'?
+      MESSAGE
+      assert !exception_message_regex.match?(exception.message)
+    end
+  end
+
   def test_no_method_error_references_helper_if_view_context_present
     view_context = ActionController::Base.new.view_context
     view_context.instance_eval {
