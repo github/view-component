@@ -94,6 +94,10 @@ nav_order: 5
 
     *Javier Aranda*
 
+* Add first class component cache.
+
+    *Reegan Viljoen*
+
 ## 3.17.0
 
 * Use struct instead openstruct in lib code.
