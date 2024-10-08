@@ -10,6 +10,14 @@ nav_order: 5
 
 ## main
 
+* Add `helpers_enabled` config.
+
+    *Reegan Viljoen*
+
+* Include ViewComponent::UseHelpers by default.
+
+    *Reegan Viljoen*
+
 * Make accommodations for component-local config to be introduced in future.
 
   BREAKING: Assigning to `ViewComponent::Base.config` will no longer work. Instead, assign to `Rails.application.config`.

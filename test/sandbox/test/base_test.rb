@@ -122,6 +122,18 @@ class ViewComponent::Base::UnitTest < Minitest::Test
     assert !exception_message_regex.match?(exception.message)
   end
 
+  def test_no_heleprs_error_if_helpers_disabled
+    with_helpers_enabled_config(false) do
+      exception = assert_raises(NoMethodError) { Class.new(ViewComponent::Base).new.current_user }
+      exception_message_regex = Regexp.new <<~MESSAGE.chomp, Regexp::MULTILINE
+        undefined method `current_user' for .*
+
+        You may be trying to call a method provided as a view helper. To use it try decalring it using use_helpers :current_user'?
+      MESSAGE
+      assert !exception_message_regex.match?(exception.message)
+    end
+  end
+
   def test_no_method_error_references_helper_if_view_context_present
     view_context = ActionController::Base.new.view_context
     view_context.instance_eval {
@@ -141,5 +153,22 @@ class ViewComponent::Base::UnitTest < Minitest::Test
       You may be trying to call a method provided as a view helper\\. Did you mean `helpers.current_user'\\?$
     MESSAGE
     assert !exception_message_regex.match?(exception.message)
+  end
+
+  def test_strict_helpers_enabled
+    with_config_option(:strict_helpers_enabled, false) do
+      top_level_component_class = Class.new(ViewComponent::Base)
+      refute ViewComponent::Base.config.strict_helpers_enabled?, ".strict_helpers_enabled? should be false by default"
+      # refute ViewComponent::Base.new.config.strict_helpers_enabled?, "#strict_helpers_enabled? should be false by default"
+      Rails.application.config.view_component[:strict_helpers_enabled?] = true
+      refute ViewComponent::Base.config.strict_helpers_enabled?, ".strict_helpers_enabled? should not be changed by global config for ViewComponent::Base"
+      # refute ViewComponent::Base.new.config.strict_helpers_enabled?, "#strict_helpers_enabled? should not be changed by global config for ViewComponent::Base"
+      assert top_level_component_class.component_config.strict_helpers_enabled?, ".strict_helpers_enabled? should inherit from global config"
+      assert top_level_component_class.new.component_config.strict_helpers_enabled?, "#strict_helpers_enabled? should inherit from global config"
+      inherited_component_class = Class.new(top_level_component_class)
+      top_level_component_class.component_config[:strict_helpers_enabled?] = false
+      refute inherited_component_class.component_config.strict_helpers_enabled?, ".strict_helpers_enabled? should inherit from its parent"
+      refute inherited_component_class.new.component_config.strict_helpers_enabled?, "#strict_helpers_enabled? should inherit from its parent"
+    end
   end
 end
