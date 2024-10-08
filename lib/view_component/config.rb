@@ -153,7 +153,7 @@ module ViewComponent
       # @!attribute preview_paths
       # @return [Array<String>]
       # The locations in which component previews will be looked up.
-      # Defaults to `['test/component/previews']` relative to your Rails root.
+      # Defaults to `['test/components/previews']` relative to your Rails root.
 
       # @!attribute test_controller
       # @return [String]

@@ -20,6 +20,10 @@ nav_order: 5
 
     *Simon Fish*
 
+* Fix `preview_paths` in docs.
+
+    *Javier Aranda*
+
 ## 3.17.0
 
 * Use struct instead openstruct in lib code.
