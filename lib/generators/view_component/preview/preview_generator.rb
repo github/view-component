@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-module Preview
+module ViewComponent
   module Generators
-    class ComponentGenerator < ::Rails::Generators::NamedBase
+    class PreviewGenerator < ::Rails::Generators::NamedBase
       source_root File.expand_path("templates", __dir__)
       class_option :preview_path, type: :string, desc: "Path for previews, required when multiple preview paths are configured", default: ViewComponent::Base.config.generate.preview_path
 

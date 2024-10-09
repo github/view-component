@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "rails/generators/abstract_generator"
+require "generators/view_component/abstract_generator"
 
-module Rails
+module ViewComponent
   module Generators
     class ComponentGenerator < Rails::Generators::NamedBase
       include ViewComponent::AbstractGenerator

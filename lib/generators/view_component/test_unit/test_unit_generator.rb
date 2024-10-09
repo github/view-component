@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-module TestUnit
+module ViewComponent
   module Generators
-    class ComponentGenerator < ::Rails::Generators::NamedBase
+    class TestUnitGenerator < ::Rails::Generators::NamedBase
       source_root File.expand_path("templates", __dir__)
       check_class_collision suffix: "ComponentTest"
 

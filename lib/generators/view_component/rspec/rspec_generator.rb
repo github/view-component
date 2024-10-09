@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "rails/generators/abstract_generator"
+require "generators/view_component/abstract_generator"
 
-module Rspec
+module ViewComponent
   module Generators
-    class ComponentGenerator < ::Rails::Generators::NamedBase
+    class RspecGenerator < ::Rails::Generators::NamedBase
       include ViewComponent::AbstractGenerator
 
       source_root File.expand_path("templates", __dir__)

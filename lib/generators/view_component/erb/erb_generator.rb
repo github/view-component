@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "rails/generators/erb"
-require "rails/generators/abstract_generator"
+require "generators/view_component/abstract_generator"
 
-module Erb
+module ViewComponent
   module Generators
-    class ComponentGenerator < Base
+    class ErbGenerator < Rails::Generators::NamedBase
       include ViewComponent::AbstractGenerator
 
       source_root File.expand_path("templates", __dir__)
