@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "rails/generators/preview/component_generator"
+require "generators/view_component/preview/preview_generator"
 
 # See: https://github.com/rails/rails/pull/47752#issuecomment-1720256371
 require "active_record"
@@ -9,7 +9,7 @@ require "active_record"
 Rails.application.load_generators
 
 class PreviewGeneratorTest < Rails::Generators::TestCase
-  tests Preview::Generators::ComponentGenerator
+  tests ViewComponent::Generators::PreviewGenerator
   destination Dir.mktmpdir
   setup :prepare_destination
 

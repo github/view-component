@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
-require "rails/generators/preview/component_generator"
+require "generators/view_component/preview/preview_generator"
 
 class PreviewGeneratorTest < Rails::Generators::TestCase
-  tests Preview::Generators::ComponentGenerator
+  tests ViewComponent::Generators::PreviewGenerator
   destination Dir.mktmpdir
   setup :prepare_destination
 

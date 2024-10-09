@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "rails/generators/haml/component_generator"
+require "generators/view_component/haml/haml_generator"
 
 Rails.application.load_generators
 
 class HamlGeneratorTest < Rails::Generators::TestCase
-  tests Haml::Generators::ComponentGenerator
+  tests ViewComponent::Generators::HamlGenerator
   destination Dir.mktmpdir
   setup :prepare_destination
 
