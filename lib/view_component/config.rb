@@ -26,7 +26,10 @@ module ViewComponent
           test_controller: "ApplicationController",
           default_preview_layout: nil,
           capture_compatibility_patch_enabled: false,
-          helpers_enabled: true
+          helpers_enabled: true,
+          component_defaults: ActiveSupport::InheritableOptions.new({
+            strict_helpers_enabled: false
+          })
         })
       end
 

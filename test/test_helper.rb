@@ -179,7 +179,7 @@ def with_compiler_development_mode(mode)
 end
 
 def with_strict_helpers_config(enabled, &block)
-  with_config_option(:strict_helpers_enabled, enabled, &block)
+  with_config_option(:strict_helpers_enabled, enabled, config_entrypoint: Rails.application.config.view_component.component_defaults, &block)
 end
 
 def with_helpers_enabled_config(enabled, &block)

@@ -233,7 +233,7 @@ module ViewComponent
     def helpers
       raise HelpersCalledBeforeRenderError if view_context.nil?
 
-      raise StrictHelperError if ViewComponent::Base.strict_helpers_enabled
+      raise StrictHelperError if !GlobalConfig.helpers_enabled || component_config.strict_helpers_enabled
       # Attempt to re-use the original view_context passed to the first
       # component rendered in the rendering pipeline. This prevents the
       # instantiation of a new view_context via `controller.view_context` which
@@ -519,6 +519,16 @@ module ViewComponent
         # Compile so child will inherit compiled `call_*` template methods that
         # `compile` defines
         compile
+
+        if child.superclass == ViewComponent::Base
+          child.define_singleton_method(:component_config) do
+            @@component_config ||= Rails.application.config.view_component.component_defaults.inheritable_copy
+          end
+        else
+          child.define_singleton_method(:component_config) do
+            @@component_config ||= superclass.component_config.inheritable_copy
+          end
+        end
 
         # Give the child its own personal #render_template_for to protect against the case when
         # eager loading is disabled and the parent component is rendered before the child. In
