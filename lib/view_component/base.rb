@@ -54,12 +54,10 @@ module ViewComponent
     #
     # @return [String]
     def cache_key
-      if defined?(__vc_cache_args)
-        @vc_cache_key = Digest::MD5.hexdigest(
+      @vc_cache_key = if defined?(__vc_cache_args)
+        Digest::MD5.hexdigest(
           __vc_cache_args.map { |method| send(method) }.join("-")
         )
-      else
-        @vc_cache_key = nil
       end
     end
 
