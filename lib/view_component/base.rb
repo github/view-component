@@ -50,7 +50,7 @@ module ViewComponent
 
     attr_accessor :__vc_original_view_context
 
-    # TODO
+    # Compoents can have a cache key that is used to cache the rendered output.
     #
     # @return [String]
     def cache_key
@@ -333,8 +333,6 @@ module ViewComponent
       defined?(@view_context) && @view_context && @__vc_render_in_block
     end
 
-
-    # TODO
     def __vc_render_template(rendered_template)
       # Avoid allocating new string when output_preamble and output_postamble are blank
       if output_preamble.blank? && output_postamble.blank?
