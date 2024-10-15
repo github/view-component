@@ -15,7 +15,6 @@ require "view_component/template"
 require "view_component/translatable"
 require "view_component/with_content_helper"
 require "view_component/use_helpers"
-require "view_component/cache_on"
 
 module ViewComponent
   class Base < ActionView::Base
@@ -35,7 +34,6 @@ module ViewComponent
     include ViewComponent::Slotable
     include ViewComponent::Translatable
     include ViewComponent::WithContentHelper
-    include ViewComponent::CacheOn
 
     RESERVED_PARAMETER = :content
     VC_INTERNAL_DEFAULT_FORMAT = :html
@@ -51,6 +49,19 @@ module ViewComponent
     self.__vc_strip_trailing_whitespace = false # class_attribute:default doesn't work until Rails 5.2
 
     attr_accessor :__vc_original_view_context
+
+    # TODO
+    #
+    # @return [String]
+    def cache_key
+      if defined?(__vc_cache_args)
+        @vc_cache_key = Digest::MD5.hexdigest(
+          __vc_cache_args.map { |method| send(method) }.join("-")
+        )
+      else
+        @vc_cache_key = nil
+      end
+    end
 
     # Components render in their own view context. Helpers and other functionality
     # require a reference to the original Rails view context, an instance of
@@ -112,11 +123,12 @@ module ViewComponent
       if render?
         rendered_template = render_template_for(@__vc_variant, __vc_request&.format&.to_sym).to_s
 
-        # Avoid allocating new string when output_preamble and output_postamble are blank
-        if output_preamble.blank? && output_postamble.blank?
-          rendered_template
+        if cache_key.present?
+          Rails.cache.fetch(@vc_cache_key) do
+            __vc_render_template(rendered_template)
+          end
         else
-          safe_output_preamble + rendered_template + safe_output_postamble
+          __vc_render_template(rendered_template)
         end
       else
         ""
@@ -321,6 +333,17 @@ module ViewComponent
       defined?(@view_context) && @view_context && @__vc_render_in_block
     end
 
+
+    # TODO
+    def __vc_render_template(rendered_template)
+      # Avoid allocating new string when output_preamble and output_postamble are blank
+      if output_preamble.blank? && output_postamble.blank?
+        rendered_template
+      else
+        safe_output_preamble + rendered_template + safe_output_postamble
+      end
+    end
+
     def __vc_content_set_by_with_content_defined?
       defined?(@__vc_content_set_by_with_content)
     end
@@ -499,6 +522,14 @@ module ViewComponent
         sidecar_directory_files = Dir["#{directory}/#{component_name}/#{filename}.*{#{extensions}}"]
 
         (sidecar_files - [identifier] + sidecar_directory_files + nested_component_files).uniq
+      end
+
+      def cache_on(*args)
+        class_eval <<~RUBY, __FILE__, __LINE__ + 1
+          def __vc_cache_args
+            #{args}
+          end
+        RUBY
       end
 
       # Render a component for each element in a collection ([documentation](/guide/collections)):
