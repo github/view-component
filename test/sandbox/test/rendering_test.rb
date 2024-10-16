@@ -1221,4 +1221,10 @@ class RenderingTest < ViewComponent::TestCase
 
     assert_selector("div", text: "salut,monde!")
   end
+
+  def test_request_param
+    render_inline(RequestParamComponent.new(request: "foo"))
+
+    assert_text("foo")
+  end
 end
