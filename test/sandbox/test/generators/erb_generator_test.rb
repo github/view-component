@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "rails/generators/erb/component_generator"
+require "generators/view_component/erb/erb_generator"
 
 Rails.application.load_generators
 
 class ErbGeneratorTest < Rails::Generators::TestCase
-  tests Erb::Generators::ComponentGenerator
+  tests ViewComponent::Generators::ErbGenerator
   destination Dir.mktmpdir
   setup :prepare_destination
 

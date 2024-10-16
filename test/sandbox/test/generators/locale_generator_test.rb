@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "rails/generators/locale/component_generator"
+require "generators/view_component/locale/locale_generator"
 
 Rails.application.load_generators
 
 class LocaleGeneratorTest < Rails::Generators::TestCase
-  tests Locale::Generators::ComponentGenerator
+  tests ViewComponent::Generators::LocaleGenerator
   destination Dir.mktmpdir
   setup :prepare_destination
 

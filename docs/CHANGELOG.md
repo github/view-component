@@ -24,6 +24,10 @@ nav_order: 5
 
     *Joel Hawksley*
 
+* BREAKING: Move generators to a ViewComponent namespace.
+
+    *Paul Sadauskas*
+
 * Add basic internal testing for memory allocations.
 
     *Joel Hawksley*
