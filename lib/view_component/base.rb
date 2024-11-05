@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "action_view"
+require "view_component/cacheable"
 require "active_support/configurable"
 require "view_component/collection"
 require "view_component/compile_cache"
@@ -34,6 +35,7 @@ module ViewComponent
     include ViewComponent::Slotable
     include ViewComponent::Translatable
     include ViewComponent::WithContentHelper
+    include ViewComponent::Cacheable
 
     RESERVED_PARAMETER = :content
     VC_INTERNAL_DEFAULT_FORMAT = :html
@@ -45,7 +47,7 @@ module ViewComponent
     delegate :content_security_policy_nonce, to: :helpers
 
     # Config option that strips trailing whitespace in templates before compiling them.
-    class_attribute :__vc_cache_dependencies, default: []
+    # class_attribute :__vc_cache_dependencies, default: []
     class_attribute :__vc_strip_trailing_whitespace, instance_accessor: false, instance_predicate: false
     self.__vc_strip_trailing_whitespace = false # class_attribute:default doesn't work until Rails 5.2
 
@@ -110,14 +112,7 @@ module ViewComponent
 
       if render?
         rendered_template = render_template_for(@__vc_variant, __vc_request&.format&.to_sym).to_s
-
-        if view_cache_dependencies.present?
-          Rails.cache.fetch(view_cache_dependencies) do
-            __vc_render_template(rendered_template)
-          end
-        else
-          __vc_render_template(rendered_template)
-        end
+        __vc_render_cacheable(rendered_template)
       else
         ""
       end
@@ -266,15 +261,6 @@ module ViewComponent
     # For caching, such as #cache_if
     #
     # @private
-    def view_cache_dependencies
-      return unless __vc_cache_dependencies.present? && __vc_cache_dependencies.any?
-
-      __vc_cache_dependencies.map { |dep| send(dep) }.compact
-    end
-
-    # For caching, such as #cache_if
-    #
-    # @private
     def format
       @__vc_variant if defined?(@__vc_variant)
     end
@@ -322,15 +308,6 @@ module ViewComponent
 
     def __vc_render_in_block_provided?
       defined?(@view_context) && @view_context && @__vc_render_in_block
-    end
-
-    def __vc_render_template(rendered_template)
-      # Avoid allocating new string when output_preamble and output_postamble are blank
-      if output_preamble.blank? && output_postamble.blank?
-        rendered_template
-      else
-        safe_output_preamble + rendered_template + safe_output_postamble
-      end
     end
 
     def __vc_content_set_by_with_content_defined?
@@ -580,8 +557,6 @@ module ViewComponent
           vc_ancestor_calls.unshift(instance_method(:render_template_for))
           child.instance_variable_set(:@__vc_ancestor_calls, vc_ancestor_calls)
         end
-
-        child.__vc_cache_dependencies = __vc_cache_dependencies.dup
 
         super
       end
