@@ -45,13 +45,11 @@ module ViewComponent
     delegate :content_security_policy_nonce, to: :helpers
 
     # Config option that strips trailing whitespace in templates before compiling them.
-    class_attribute :__vc_cache_dependencies, instance_accessor: false, instance_predicate: false, default: []
+    class_attribute :__vc_cache_dependencies, default: []
     class_attribute :__vc_strip_trailing_whitespace, instance_accessor: false, instance_predicate: false
     self.__vc_strip_trailing_whitespace = false # class_attribute:default doesn't work until Rails 5.2
 
     attr_accessor :__vc_original_view_context
-
-
 
     # Components render in their own view context. Helpers and other functionality
     # require a reference to the original Rails view context, an instance of
@@ -295,6 +293,12 @@ module ViewComponent
       @__vc_request ||= controller.request if controller.respond_to?(:request)
     end
 
+    def view_cache_dependencies
+      return unless __vc_cache_dependencies.present? && __vc_cache_dependencies.any?
+
+      __vc_cache_dependencies.map { |dep| send(dep) }.compact
+    end
+
     # The content passed to the component instance as a block.
     #
     # @return [String]
@@ -458,7 +462,8 @@ module ViewComponent
     # config.view_component.generate.preview = true
     # ```
     #
-    #  Defaults to `false`.
+    #  Defaults to `false`
+    #
 
     class << self
       # The file path of the component Ruby file.
@@ -471,6 +476,8 @@ module ViewComponent
 
       # @private
       attr_accessor :virtual_path
+
+
 
       # Find sidecar files for the given extensions.
       #
@@ -514,16 +521,8 @@ module ViewComponent
         (sidecar_files - [identifier] + sidecar_directory_files + nested_component_files).uniq
       end
 
-
-
       def cache_on(*args)
-        self.__vc_cache_dependencies.push(*args)
-      end
-
-      def view_cache_dependencies
-        return unless __vc_cache_dependencies.any?
-
-        __vc_cache_dependencies.map { |dep| send(dep) }.compact
+        __vc_cache_dependencies.push(*args)
       end
 
       # Render a component for each element in a collection ([documentation](/guide/collections)):
@@ -590,6 +589,8 @@ module ViewComponent
           vc_ancestor_calls.unshift(instance_method(:render_template_for))
           child.instance_variable_set(:@__vc_ancestor_calls, vc_ancestor_calls)
         end
+
+        child.__vc_cache_dependencies = self.__vc_cache_dependencies.dup
 
         super
       end
