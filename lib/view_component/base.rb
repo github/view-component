@@ -266,6 +266,15 @@ module ViewComponent
     # For caching, such as #cache_if
     #
     # @private
+    def view_cache_dependencies
+      return unless __vc_cache_dependencies.present? && __vc_cache_dependencies.any?
+
+      __vc_cache_dependencies.map { |dep| send(dep) }.compact
+    end
+
+    # For caching, such as #cache_if
+    #
+    # @private
     def format
       @__vc_variant if defined?(@__vc_variant)
     end
@@ -283,15 +292,6 @@ module ViewComponent
     # @private
     def __vc_request
       @__vc_request ||= controller.request if controller.respond_to?(:request)
-    end
-
-    # For caching, such as #cache_if
-    #
-    # @private
-    def view_cache_dependencies
-      return unless __vc_cache_dependencies.present? && __vc_cache_dependencies.any?
-
-      __vc_cache_dependencies.map { |dep| send(dep) }.compact
     end
 
     # The content passed to the component instance as a block.
@@ -456,8 +456,6 @@ module ViewComponent
     # ```ruby
     # config.view_component.generate.preview = true
     # ```
-    #
-    #  Defaults to `false`
     #
 
     class << self
