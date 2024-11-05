@@ -47,7 +47,6 @@ module ViewComponent
     delegate :content_security_policy_nonce, to: :helpers
 
     # Config option that strips trailing whitespace in templates before compiling them.
-    # class_attribute :__vc_cache_dependencies, default: []
     class_attribute :__vc_strip_trailing_whitespace, instance_accessor: false, instance_predicate: false
     self.__vc_strip_trailing_whitespace = false # class_attribute:default doesn't work until Rails 5.2
 
@@ -434,7 +433,7 @@ module ViewComponent
     # config.view_component.generate.preview = true
     # ```
     #
-
+    #  Defaults to `false`.
     class << self
       # The file path of the component Ruby file.
       #
@@ -487,10 +486,6 @@ module ViewComponent
         sidecar_directory_files = Dir["#{directory}/#{component_name}/#{filename}.*{#{extensions}}"]
 
         (sidecar_files - [identifier] + sidecar_directory_files + nested_component_files).uniq
-      end
-
-      def cache_on(*args)
-        __vc_cache_dependencies.push(*args)
       end
 
       # Render a component for each element in a collection ([documentation](/guide/collections)):
