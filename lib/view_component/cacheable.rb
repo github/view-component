@@ -42,7 +42,6 @@ module ViewComponent::Cacheable
   end
 
   class_methods do
-
     # For caching the component
     def cache_on(*args)
       __vc_cache_dependencies.push(*args)

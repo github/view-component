@@ -22,6 +22,10 @@ nav_order: 5
 
     *Reegan Viljoen*
 
+* Add first class component cache.
+
+    *Reegan Viljoen*
+
 ## 3.21.0
 
 * Updates testing docs to include an example of how to use with RSpec.
@@ -93,10 +97,6 @@ nav_order: 5
 * Fix `preview_paths` in docs.
 
     *Javier Aranda*
-
-* Add first class component cache.
-
-    *Reegan Viljoen*
 
 ## 3.17.0
 
