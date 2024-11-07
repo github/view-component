@@ -12,7 +12,7 @@ module ViewComponent::Cacheable
     def view_cache_dependencies
       return unless __vc_cache_dependencies.present? && __vc_cache_dependencies.any?
 
-      __vc_cache_dependencies.map { |dep| send(dep) }.compact
+      __vc_cache_dependencies.filter_map { |dep| send(dep) }
     end
 
     # For handeling the output_preamble and output_postamble
