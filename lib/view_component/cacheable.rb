@@ -10,7 +10,7 @@ module ViewComponent::Cacheable
     #
     # @private
     def view_cache_dependencies
-      return unless __vc_cache_dependencies.present? && __vc_cache_dependencies.any?
+      return if __vc_cache_dependencies.blank? || __vc_cache_dependencies.none?
 
       __vc_cache_dependencies.filter_map { |dep| send(dep) }
     end
