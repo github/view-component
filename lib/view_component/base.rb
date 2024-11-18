@@ -30,12 +30,12 @@ module ViewComponent
       end
     end
 
+    include ViewComponent::Cacheable
     include ViewComponent::InlineTemplate
     include ViewComponent::UseHelpers
     include ViewComponent::Slotable
     include ViewComponent::Translatable
     include ViewComponent::WithContentHelper
-    include ViewComponent::Cacheable
 
     RESERVED_PARAMETER = :content
     VC_INTERNAL_DEFAULT_FORMAT = :html
