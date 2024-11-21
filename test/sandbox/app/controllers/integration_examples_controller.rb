@@ -14,7 +14,7 @@ class IntegrationExamplesController < ActionController::Base
   def controller_inline_cached
     foo = params[:foo] || "foo"
     bar = params[:bar] || "bar"
-    render(CacheComponent.new(foo:, bar:))
+    render(CacheComponent.new(foo: foo, bar: bar))
   end
 
   def controller_inline_with_block
