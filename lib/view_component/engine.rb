@@ -76,12 +76,12 @@ module ViewComponent
     end
     # :nocov:
 
-    initializer "view_component.set_autoload_paths" do |app|
+    initializer "view_component.set_autoload_paths", before: :set_autoload_paths do |app|
       options = app.config.view_component
 
       if options.show_previews && !options.preview_paths.empty?
-        paths_to_add = options.preview_paths - ActiveSupport::Dependencies.autoload_paths
-        ActiveSupport::Dependencies.autoload_paths.concat(paths_to_add) if paths_to_add.any?
+        paths_to_add = options.preview_paths - app.config.autoload_paths
+        app.config.autoload_paths.concat(paths_to_add) if paths_to_add.any?
       end
     end
 
