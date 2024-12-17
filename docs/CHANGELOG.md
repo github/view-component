@@ -10,6 +10,10 @@ nav_order: 5
 
 ## main
 
+* Fix setting custom `preview_paths`.
+
+    *Thomas von Deyen*
+
 * Add FreeATS to list of companies using ViewComponent.
 
     *Ilia Liamshin*
