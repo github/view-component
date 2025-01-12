@@ -93,11 +93,15 @@ module ViewComponent
         end
 
       @component.silence_redefinition_of_method(:render_template_for)
-      @component.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-      def render_template_for(variant = nil, format = nil)
-        #{method_body}
+      begin
+        @component.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+        def render_template_for(variant = nil, format = nil)
+          #{method_body}
+        end
+        RUBY
+      rescue SyntaxError
+        raise ViewComponent::CompilerMethodBodySyntaxError.new(@component.name, method_body)
       end
-      RUBY
     end
 
     def template_errors

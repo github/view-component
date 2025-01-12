@@ -10,6 +10,10 @@ nav_order: 5
 
 ## main
 
+* Improve error messaging for malformed components.
+
+    *Martin Meyerhoff*, *Joel Hawksley*
+
 * Do not prefix release tags with `v`, per recommendation from @bkuhlmann.
 
     *Joel Hawksley*

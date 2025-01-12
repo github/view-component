@@ -237,4 +237,12 @@ module ViewComponent
       super(MESSAGE.gsub("SETTER_METHOD_NAME", setter_method_name.to_s).gsub("SETTER_NAME", setter_name.to_s))
     end
   end
+
+  class CompilerMethodBodySyntaxError < StandardError
+    MESSAGE = "Could not compile COMPONENT_NAME due to SyntaxError in method body: METHOD_BODY"
+
+    def initialize(component_name, method_body)
+      super(MESSAGE.gsub("COMPONENT_NAME", component_name.to_s).gsub("METHOD_BODY", method_body.to_s))
+    end
+  end
 end
