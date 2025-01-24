@@ -38,6 +38,22 @@ module ViewComponent
     end
   end
 
+  class MissingTemplateError < StandardError
+    MESSAGE =
+      "No templates for COMPONENT match the request DETAIL.\n\n" \
+      "To fix this issue, provide a suitable template."
+
+    def initialize(component, request_detail)
+      detail = {
+        locale: request_detail.locale,
+        formats: request_detail.formats,
+        variants: request_detail.variants,
+        handlers: request_detail.handlers
+      }
+      super(MESSAGE.gsub("COMPONENT", component).gsub("DETAIL", detail.inspect))
+    end
+  end
+
   class DuplicateContentError < StandardError
     MESSAGE =
       "It looks like a block was provided after calling `with_content` on COMPONENT, " \

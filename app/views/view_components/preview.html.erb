@@ -1,9 +1,5 @@
 <% if @render_args[:component] %>
-  <% if ViewComponent::Base.config.render_monkey_patch_enabled || Rails.version.to_f >= 6.1 %>
-    <%= render(@render_args[:component], @render_args[:args], &@render_args[:block]) %>
-  <% else %>
-    <%= render_component(@render_args[:component], &@render_args[:block]) %>
-  <% end %>
+  <%= render(@render_args[:component], @render_args[:args], &@render_args[:block]) %>
 <% else %>
   <%= render template: @render_args[:template], locals: @render_args[:locals] || {} %>
 <% end %>

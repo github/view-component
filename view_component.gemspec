@@ -27,9 +27,9 @@ Gem::Specification.new do |spec|
   spec.files = Dir["LICENSE.txt", "README.md", "app/**/*", "docs/CHANGELOG.md", "lib/**/*"]
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
-  spec.add_runtime_dependency "activesupport", [">= 5.2.0", "< 8.1"]
+  spec.add_runtime_dependency "activesupport", [">= 7.1.0", "< 8.1"]
   spec.add_runtime_dependency "method_source", "~> 1.0"
   spec.add_runtime_dependency "concurrent-ruby", "1.3.4" # lock version that supports Rails 6.1
   spec.add_development_dependency "allocation_stats", "~> 0.1.5"
@@ -61,11 +61,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "yard", "~> 0.9.34"
   spec.add_development_dependency "yard-activesupport-concern", "~> 0.0.1"
 
-  if RUBY_VERSION >= "3.1"
-    spec.add_development_dependency "net-imap"
-    spec.add_development_dependency "net-pop"
-    spec.add_development_dependency "net-smtp"
-  end
+  spec.add_development_dependency "net-imap"
+  spec.add_development_dependency "net-pop"
+  spec.add_development_dependency "net-smtp"
 
   if RUBY_VERSION >= "3.3"
     spec.add_development_dependency "base64"

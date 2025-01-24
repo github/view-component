@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_view/renderer/collection_renderer" if Rails.version.to_f >= 6.1
+require "action_view/renderer/collection_renderer"
 
 module ViewComponent
   class Collection

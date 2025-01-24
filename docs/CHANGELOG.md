@@ -10,6 +10,35 @@ nav_order: 5
 
 ## main
 
+## 4.0.0
+
+* BREAKING: Require [non-EOL](https://endoflife.date/rails) Rails (`>= 7.1.0`).
+
+    *Joel Hawksley*
+
+* BREAKING: Require [non-EOL](https://www.ruby-lang.org/en/downloads/branches/) Ruby (`>= 3.2.0`).
+
+    *Joel Hawksley*
+
+* BREAKING: Remove `render_component` and `render` monkey patch configured with `render_monkey_patch_enabled`.
+
+    *Joel Hawksley*
+
+* BREAKING: Remove support for variant names containing `.` to be consistent with Rails.
+
+    *Stephen Nelson*
+
+* BREAKING: Use ActionView's `lookup_context` for picking templates instead of the request format.
+
+  3.15 added support for using templates that match the request format, i.e. if `/resource.csv` is requested then
+  ViewComponents would pick `_component.csv.erb` over `_component.html.erb`.
+
+  With this release, the request format is no longer considered and instead ViewComponent will use the Rails logic
+  for picking the most appropriate template type, i.e. the csv template will be used if it matches the `Accept` header
+  or because the controller uses a `respond_to` block to pick the response format.
+
+    *Stephen Nelson*
+
 * Remove JS and CSS docs as they proved difficult to maintain and lacked consensus.
 
     *Joel Hawksley*

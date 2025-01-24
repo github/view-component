@@ -76,7 +76,3 @@ Calls to form helpers such as `form_with` in ViewComponents [don't use the defau
   <%= f.text_field :name %>
 <% end %>
 ```
-
-## Inconsistent controller rendering behavior between Rails versions
-
-In versions of Rails < 6.1, rendering a ViewComponent from a controller doesn't include the layout.

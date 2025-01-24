@@ -169,10 +169,6 @@ def with_default_preview_layout(layout, &block)
   with_config_option(:default_preview_layout, layout, &block)
 end
 
-def with_render_monkey_patch_config(enabled, &block)
-  with_config_option(:render_monkey_patch_enabled, enabled, &block)
-end
-
 def with_compiler_development_mode(mode)
   previous_mode = ViewComponent::Compiler.development_mode
   ViewComponent::Compiler.development_mode = mode

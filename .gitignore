@@ -1,6 +1,7 @@
 *.gem
 *.rbc
 .ruby-version
+.DS_Store
 /.config
 /coverage/assets
 /coverage/index.html

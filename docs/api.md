@@ -243,12 +243,6 @@ Defaults to `['test/components/previews']` relative to your Rails root.
 The entry route for component previews.
 Defaults to `"/rails/view_components"`.
 
-### `.render_monkey_patch_enabled`
-
-If this is disabled, use `#render_component` or
-`#render_component_to_string` instead.
-Defaults to `true`.
-
 ### `.show_previews`
 
 Whether component previews are enabled.

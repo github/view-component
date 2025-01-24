@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     view_component (3.21.0)
-      activesupport (>= 5.2.0, < 8.1)
+      activesupport (>= 7.1.0, < 8.1)
       concurrent-ruby (= 1.3.4)
       method_source (~> 1.0)
 

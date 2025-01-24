@@ -30,8 +30,6 @@ module ViewComponent # :nodoc:
       }
     end
 
-    alias_method :render_component, :render
-
     class << self
       # Returns all component preview classes.
       def all

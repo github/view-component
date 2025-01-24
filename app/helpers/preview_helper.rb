@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 module PreviewHelper
-  # :nocov:
-  include ActionView::Helpers::AssetUrlHelper if Rails.version.to_f < 6.1
-  # :nocov:
-
   AVAILABLE_PRISM_LANGUAGES = %w[ruby erb haml]
   FALLBACK_LANGUAGE = "ruby"
 
@@ -25,38 +21,10 @@ module PreviewHelper
   def find_template_data_for_preview_source(lookup_context:, template_identifier:)
     template = lookup_context.find_template(template_identifier)
 
-    if Rails.version.to_f >= 6.1 || template.source.present?
-      {
-        source: template.source,
-        prism_language_name: prism_language_name_by_template(template: template)
-      }
-    # :nocov:
-    else
-      # Fetch template source via finding it through preview paths
-      # to accomodate source view when exclusively using templates
-      # for previews for Rails < 6.1.
-      all_template_paths = ViewComponent::Base.config.preview_paths.map do |preview_path|
-        Dir.glob("#{preview_path}/**/*")
-      end.flatten
-
-      # Search for templates the contain `html`.
-      matching_templates = all_template_paths.find_all do |path|
-        path =~ /#{template_identifier}*.(html)/
-      end
-
-      raise ViewComponent::NoMatchingTemplatesForPreviewError.new(template_identifier) if matching_templates.empty?
-      raise ViewComponent::MultipleMatchingTemplatesForPreviewError.new(template_identifier) if matching_templates.size > 1
-
-      template_file_path = matching_templates.first
-      template_source = File.read(template_file_path)
-      prism_language_name = prism_language_name_by_template_path(template_file_path: template_file_path)
-
-      {
-        source: template_source,
-        prism_language_name: prism_language_name
-      }
-    end
-    # :nocov:
+    {
+      source: template.source,
+      prism_language_name: prism_language_name_by_template(template: template)
+    }
   end
 
   private

@@ -23,23 +23,13 @@ class IntegrationExamplesController < ActionController::Base
   end
 
   def controller_to_string
-    # Ensures render_to_string_monkey_patch.rb correctly calls `super` when
-    # not rendering a component:
     render_to_string("integration_examples/_controller_inline", locals: {message: "bar"})
 
     render(plain: render_to_string(ControllerInlineComponent.new(message: "bar")))
   end
 
-  def controller_inline_render_component
-    render_component(ControllerInlineComponent.new(message: "bar"))
-  end
-
   def helpers_proxy_component
     render(plain: render_to_string(HelpersProxyComponent.new))
-  end
-
-  def controller_to_string_render_component
-    render(plain: render_component_to_string(ControllerInlineComponent.new(message: "bar")))
   end
 
   def products

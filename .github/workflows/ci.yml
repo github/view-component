@@ -29,18 +29,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ruby_version: "3.0"
-            rails_version: "6.1"
-            mode: "capture_patch_enabled"
-          - ruby_version: "3.0"
-            rails_version: "6.1"
-            mode: "capture_patch_disabled"
-          - ruby_version: "3.1"
-            rails_version: "7.0"
-            mode: "capture_patch_enabled"
-          - ruby_version: "3.1"
-            rails_version: "7.0"
-            mode: "capture_patch_disabled"
           - ruby_version: "3.2"
             rails_version: "7.1"
             mode: "capture_patch_enabled"

@@ -18,7 +18,6 @@ module ViewComponent
           show_previews_source: false,
           instrumentation_enabled: false,
           use_deprecated_instrumentation_name: true,
-          render_monkey_patch_enabled: true,
           view_component_path: "app/components",
           component_parent_class: nil,
           show_previews: Rails.env.development? || Rails.env.test?,
@@ -124,12 +123,6 @@ module ViewComponent
       # Whether ActiveSupport Notifications use the private name `"!render.view_component"`
       # or are made more publicly available via `"render.view_component"`.
       # Will default to `false` in next major version.
-      # Defaults to `true`.
-
-      # @!attribute render_monkey_patch_enabled
-      # @return [Boolean] Whether the #render method should be monkey patched.
-      # If this is disabled, use `#render_component` or
-      # `#render_component_to_string` instead.
       # Defaults to `true`.
 
       # @!attribute view_component_path

@@ -25,7 +25,7 @@ Sandbox::Application.configure do
   config.action_controller.perform_caching = false
 
   # Raise exceptions instead of rendering exception templates
-  config.action_dispatch.show_exceptions = (Rails::VERSION::STRING < "7.1") ? false : :none
+  config.action_dispatch.show_exceptions = :none
 
   # Disable request forgery protection in test environment
   config.action_controller.allow_forgery_protection = false
@@ -33,7 +33,6 @@ Sandbox::Application.configure do
   config.view_component.show_previews = true
 
   config.view_component.preview_paths << "#{Rails.root}/lib/component_previews"
-  config.view_component.render_monkey_patch_enabled = true
   config.view_component.show_previews_source = true
   config.view_component.test_controller = "IntegrationExamplesController"
   config.view_component.capture_compatibility_patch_enabled = ENV["CAPTURE_PATCH_ENABLED"] == "true"
@@ -51,7 +50,7 @@ Sandbox::Application.configure do
   # Print deprecation notices to the stderr
   config.active_support.deprecation = :stderr
 
-  config.action_view.annotate_rendered_view_with_filenames = true if Rails.version.to_f >= 6.1
+  config.action_view.annotate_rendered_view_with_filenames = true
 
   config.eager_load = true
 
