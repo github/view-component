@@ -11,6 +11,7 @@ Sandbox::Application.routes.draw do
   get :inline_products, to: "integration_examples#inline_products"
   get :cached, to: "integration_examples#cached"
   get :render_check, to: "integration_examples#render_check"
+  get :controller_inline_cached, to: "integration_examples#controller_inline_cached"
   get :controller_inline, to: "integration_examples#controller_inline"
   get :controller_inline_with_block, to: "integration_examples#controller_inline_with_block"
   get :controller_inline_baseline, to: "integration_examples#controller_inline_baseline"

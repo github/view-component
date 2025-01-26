@@ -11,6 +11,12 @@ class IntegrationExamplesController < ActionController::Base
     render(ControllerInlineComponent.new(message: "bar"))
   end
 
+  def controller_inline_cached
+    foo = params[:foo] || "foo"
+    bar = params[:bar] || "bar"
+    render(CacheComponent.new(foo: foo, bar: bar))
+  end
+
   def controller_inline_with_block
     render(ControllerInlineWithBlockComponent.new(message: "bar").tap do |c|
       c.with_slot(name: "baz")
