@@ -4,13 +4,13 @@ module Preview
   module Generators
     class ComponentGenerator < ::Rails::Generators::NamedBase
       source_root File.expand_path("templates", __dir__)
-      class_option :preview_path, type: :string, desc: "Path for previews, required when multiple preview paths are configured", default: ViewComponent::Base.config.generate.preview_path
+      class_option :preview_path, type: :string, desc: "Path for previews, required when multiple preview paths are configured", default: ViewComponent::GlobalConfig.generate.preview_path
 
       argument :attributes, type: :array, default: [], banner: "attribute"
       check_class_collision suffix: "ComponentPreview"
 
       def create_preview_file
-        preview_paths = ViewComponent::Base.config.preview_paths
+        preview_paths = ViewComponent::GlobalConfig.preview_paths
         optional_path = options[:preview_path]
         return if preview_paths.count > 1 && optional_path.blank?
 

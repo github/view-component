@@ -23,7 +23,7 @@ module ViewComponent # :nodoc:
     private
 
     def notification_name
-      return "!render.view_component" if ViewComponent::Base.config.use_deprecated_instrumentation_name
+      return "!render.view_component" if GlobalConfig.use_deprecated_instrumentation_name
 
       "render.view_component"
     end

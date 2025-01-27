@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "action_view"
-require "active_support/configurable"
 require "view_component/collection"
 require "view_component/compile_cache"
 require "view_component/compiler"
@@ -25,7 +24,7 @@ module ViewComponent
       #
       # @return [ActiveSupport::OrderedOptions]
       def config
-        ViewComponent::Config.current
+        GlobalConfig
       end
     end
 
@@ -47,6 +46,8 @@ module ViewComponent
     # Config option that strips trailing whitespace in templates before compiling them.
     class_attribute :__vc_strip_trailing_whitespace, instance_accessor: false, instance_predicate: false
     self.__vc_strip_trailing_whitespace = false # class_attribute:default doesn't work until Rails 5.2
+
+    delegate :component_config, to: :class
 
     attr_accessor :__vc_original_view_context
 
@@ -227,7 +228,6 @@ module ViewComponent
     # @return [ActionView::Base]
     def helpers
       raise HelpersCalledBeforeRenderError if view_context.nil?
-
       # Attempt to re-use the original view_context passed to the first
       # component rendered in the rendering pipeline. This prevents the
       # instantiation of a new view_context via `controller.view_context` which
@@ -550,7 +550,7 @@ module ViewComponent
         # If Rails application is loaded, removes the first part of the path and the extension.
         if defined?(Rails) && Rails.application
           child.virtual_path = child.identifier.gsub(
-            /(.*#{Regexp.quote(ViewComponent::Base.config.view_component_path)})|(\.rb)/, ""
+            /(.*#{Regexp.quote(GlobalConfig.view_component_path)})|(\.rb)/, ""
           )
         end
 

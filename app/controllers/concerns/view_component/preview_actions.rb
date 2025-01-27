@@ -54,12 +54,12 @@ module ViewComponent
 
     # :doc:
     def default_preview_layout
-      ViewComponent::Base.config.default_preview_layout
+      GlobalConfig.default_preview_layout
     end
 
     # :doc:
     def show_previews?
-      ViewComponent::Base.config.show_previews
+      GlobalConfig.show_previews
     end
 
     # :doc:
@@ -102,7 +102,7 @@ module ViewComponent
     end
 
     def prepend_preview_examples_view_path
-      prepend_view_path(ViewComponent::Base.preview_paths)
+      prepend_view_path(GlobalConfig.preview_paths)
     end
   end
 end

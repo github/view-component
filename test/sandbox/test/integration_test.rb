@@ -579,7 +579,7 @@ class IntegrationTest < ActionDispatch::IntegrationTest
       expected_response_body = <<~TURBOSTREAM
         <turbo-stream action="update" target="area1"><template><span>Hello, world!</span></template></turbo-stream>
       TURBOSTREAM
-      if ViewComponent::Base.config.capture_compatibility_patch_enabled
+      if ViewComponent::GlobalConfig.capture_compatibility_patch_enabled
         assert_equal expected_response_body, response.body
       else
         assert_not_equal expected_response_body, response.body
@@ -716,10 +716,14 @@ class IntegrationTest < ActionDispatch::IntegrationTest
     Rails.cache.clear
   end
 
-  def test_config_options_shared_between_base_and_engine
-    config_entrypoints = [Rails.application.config.view_component, ViewComponent::Base.config]
-    2.times do
-      config_entrypoints.first.yield_self do |config|
+  def test_globalconfig_is_proxy_for_rails_app_config
+    config_entrypoints = [
+      ["Rails application config", Rails.application.config.view_component],
+      ["Global config", ViewComponent::GlobalConfig],
+      ["ViewComponent::Base's config", ViewComponent::Base.config]
+    ]
+    config_entrypoints.permutation(2) do |(first_entrypoint_name, first_entrypoint), (second_entrypoint_name, second_entrypoint)|
+      first_entrypoint.yield_self do |config|
         {
           generate: config.generate.dup.tap { |c| c.sidecar = true },
           preview_controller: "SomeOtherController",
@@ -727,11 +731,11 @@ class IntegrationTest < ActionDispatch::IntegrationTest
           show_previews_source: true
         }.each do |option, value|
           with_config_option(option, value, config_entrypoint: config) do
-            assert_equal(config.public_send(option), config_entrypoints.second.public_send(option))
+            assert_equal(config.public_send(option), second_entrypoint.public_send(option),
+              "#{first_entrypoint_name} should be the same as #{second_entrypoint_name} for #{option.inspect}")
           end
         end
       end
-      config_entrypoints.rotate!
     end
   end
 

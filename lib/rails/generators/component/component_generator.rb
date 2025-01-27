@@ -13,12 +13,12 @@ module Rails
       check_class_collision suffix: "Component"
 
       class_option :inline, type: :boolean, default: false
-      class_option :locale, type: :boolean, default: ViewComponent::Base.config.generate.locale
+      class_option :locale, type: :boolean, default: ViewComponent::GlobalConfig.generate.locale
       class_option :parent, type: :string, desc: "The parent class for the generated component"
-      class_option :preview, type: :boolean, default: ViewComponent::Base.config.generate.preview
+      class_option :preview, type: :boolean, default: ViewComponent::GlobalConfig.generate.preview
       class_option :sidecar, type: :boolean, default: false
       class_option :stimulus, type: :boolean,
-        default: ViewComponent::Base.config.generate.stimulus_controller
+        default: ViewComponent::GlobalConfig.generate.stimulus_controller
       class_option :skip_suffix, type: :boolean, default: false
 
       def create_component_file
@@ -42,7 +42,7 @@ module Rails
       def parent_class
         return options[:parent] if options[:parent]
 
-        ViewComponent::Base.config.component_parent_class || default_parent_class
+        ViewComponent::GlobalConfig.component_parent_class || default_parent_class
       end
 
       def initialize_signature

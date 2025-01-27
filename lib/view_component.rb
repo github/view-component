@@ -13,6 +13,7 @@ module ViewComponent
   autoload :ComponentError
   autoload :Config
   autoload :Deprecation
+  autoload :GlobalConfig
   autoload :InlineTemplate
   autoload :Instrumentation
   autoload :Preview

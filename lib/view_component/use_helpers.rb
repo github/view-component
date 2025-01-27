@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "view_component/errors"
+
 module ViewComponent::UseHelpers
   extend ActiveSupport::Concern
 
@@ -13,7 +15,7 @@ module ViewComponent::UseHelpers
 
       class_eval(<<-RUBY, __FILE__, __LINE__ + 1)
         def #{helper_method_name}(*args, &block)
-          raise HelpersCalledBeforeRenderError if view_context.nil?
+          raise ::ViewComponent::HelpersCalledBeforeRenderError if view_context.nil?
 
           #{define_helper(helper_method: helper_method, source: from)}
         end

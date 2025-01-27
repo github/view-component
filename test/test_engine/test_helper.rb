@@ -22,7 +22,7 @@ require "view_component"
 
 Rails::Generators.namespace = TestEngine
 
-def with_config_option(option_name, new_value, config_entrypoint: TestEngine::Engine.config.view_component)
+def with_config_option(option_name, new_value, config_entrypoint: ViewComponent::GlobalConfig)
   old_value = config_entrypoint.public_send(option_name)
   config_entrypoint.public_send(:"#{option_name}=", new_value)
   yield

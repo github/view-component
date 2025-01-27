@@ -35,7 +35,7 @@ module PreviewHelper
       # Fetch template source via finding it through preview paths
       # to accomodate source view when exclusively using templates
       # for previews for Rails < 6.1.
-      all_template_paths = ViewComponent::Base.config.preview_paths.map do |preview_path|
+      all_template_paths = ViewComponent::GlobalConfig.preview_paths.map do |preview_path|
         Dir.glob("#{preview_path}/**/*")
       end.flatten
 
@@ -80,6 +80,6 @@ module PreviewHelper
   # :nocov:
 
   def serve_static_preview_assets?
-    ViewComponent::Base.config.show_previews && Rails.application.config.public_file_server.enabled
+    ViewComponent::GlobalConfig.show_previews && Rails.application.config.public_file_server.enabled
   end
 end

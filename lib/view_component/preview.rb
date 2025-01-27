@@ -109,7 +109,7 @@ module ViewComponent # :nodoc:
       private
 
       def preview_paths
-        Base.preview_paths
+        ViewComponent::GlobalConfig.preview_paths
       end
     end
   end
